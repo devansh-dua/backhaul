@@ -2,13 +2,15 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CarrierNavbar } from '../../components/Navbar';
 import { shipmentApi } from '../../services/shipment.api';
-import { matchApi } from '../../services/match.api';
-import { Package, ChevronRight, CheckCircle2, ShieldCheck, Sparkles, ArrowRight, Inbox } from 'lucide-react';
+import { useSocket } from '../../context/SocketContext';
+import { Package, ChevronRight, CheckCircle2, ShieldCheck, Sparkles, ArrowRight, Inbox, AlertCircle } from 'lucide-react';
 
 export const FindLoads = () => {
   const navigate = useNavigate();
+  const { acceptShipment, acceptingLoad } = useSocket();
   const [shipments, setShipments] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState(null);
 
   useEffect(() => {
     fetchPostedShipments();
@@ -31,20 +33,18 @@ export const FindLoads = () => {
   };
 
   const handleSelectLoad = async (shipment) => {
-    try {
-      const res = await matchApi.acceptMatch({
-        shipmentId: shipment._id,
-        grossRevenueINR: shipment.offeredPriceINR || 0,
-        detourKm: 12,
-        totalWeight: shipment.weightTons || 2.5
-      });
-      if (res.data && res.data.success && res.data.data) {
-        navigate(`/tracking/${res.data.data._id}`);
-      } else {
-        navigate('/carrier/trips');
-      }
-    } catch (e) {
-      navigate('/carrier/trips');
+    setErrorMessage(null);
+    const res = await acceptShipment(shipment._id, {
+      grossRevenueINR: shipment.offeredPriceINR || 0,
+      detourKm: 12,
+      totalWeight: shipment.weightTons || 2.5
+    });
+
+    if (res.success && res.trip) {
+      navigate(`/tracking/${res.trip._id}`);
+    } else {
+      setErrorMessage(res.message || 'Failed to accept load. Shipment may no longer be available.');
+      fetchPostedShipments(); // refresh list
     }
   };
 
@@ -74,6 +74,16 @@ export const FindLoads = () => {
             </span>
           </div>
         </div>
+
+        {errorMessage && (
+          <div className="p-4 bg-red-50 border border-red-200 text-red-700 rounded-xl text-xs font-bold font-outfit flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <AlertCircle size={16} className="text-red-500 shrink-0" />
+              <span>{errorMessage}</span>
+            </div>
+            <button onClick={() => setErrorMessage(null)} className="text-red-500 hover:text-red-700">✕</button>
+          </div>
+        )}
 
         {/* Table or Empty State */}
         {shipments.length === 0 ? (
@@ -125,7 +135,8 @@ export const FindLoads = () => {
                       <td className="text-right">
                         <button
                           onClick={() => handleSelectLoad(s)}
-                          className="bg-slate-900 hover:bg-slate-800 text-white text-xs px-4 py-2 rounded-lg flex items-center justify-center gap-1.5 ml-auto font-outfit cursor-pointer"
+                          disabled={acceptingLoad}
+                          className="bg-slate-900 hover:bg-slate-800 text-white text-xs px-4 py-2 rounded-lg flex items-center justify-center gap-1.5 ml-auto font-outfit cursor-pointer disabled:opacity-50"
                         >
                           Accept Load <ArrowRight size={13} />
                         </button>

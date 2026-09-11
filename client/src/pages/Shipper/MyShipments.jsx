@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { ShipperNavbar } from '../../components/Navbar';
 import { shipmentApi } from '../../services/shipment.api';
+import { podApi } from '../../services/pod.api';
 import { Package, ArrowRight, Plus, Inbox } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 
@@ -103,13 +104,29 @@ export const MyShipments = () => {
                       </td>
                       <td>
                         <span className={
+                          s.status === 'DELIVERY_OTP_REQUESTED' ? 'badge-amber font-extrabold animate-pulse' :
                           s.status === 'IN_TRANSIT' ? 'badge-purple' :
                           s.status === 'DELIVERED' ? 'badge-emerald' : 'badge-cyan'
                         }>
-                          {s.status}
+                          {s.status === 'DELIVERY_OTP_REQUESTED' ? '🔑 OTP REQUESTED' : s.status}
                         </span>
                       </td>
-                      <td className="text-right">
+                      <td className="text-right flex items-center justify-end gap-2">
+                        {s.status === 'DELIVERY_OTP_REQUESTED' && (
+                          <button
+                            onClick={async () => {
+                              try {
+                                const res = await podApi.getShipperOtp(s._id);
+                                if (res.data?.success && res.data.data) {
+                                  window.dispatchEvent(new CustomEvent('open_shipper_otp', { detail: res.data.data }));
+                                }
+                              } catch (e) {}
+                            }}
+                            className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-extrabold text-xs px-3 py-1.5 inline-flex items-center gap-1 font-outfit rounded-lg shadow-sm cursor-pointer"
+                          >
+                            🔑 View OTP
+                          </button>
+                        )}
                         <Link
                           to={`/tracking/${s._id}`}
                           className="bg-slate-900 hover:bg-slate-800 text-white text-xs px-3.5 py-1.5 inline-flex items-center gap-1.5 font-outfit rounded-lg cursor-pointer"

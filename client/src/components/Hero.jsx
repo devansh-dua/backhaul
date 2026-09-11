@@ -104,7 +104,7 @@ export const Hero = ({ onScrollToOpportunities }) => {
           </h1>
 
           <p className="text-base sm:text-lg text-slate-200 font-normal max-w-xl leading-relaxed">
-            BackhaulX finds the most profitable loads for your existing route.<br />
+            BACKTRACKING finds the most profitable loads for your existing route.<br />
             Turn empty space into real revenue — with AI on your side.
           </p>
 

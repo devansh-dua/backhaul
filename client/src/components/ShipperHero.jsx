@@ -66,7 +66,7 @@ export const ShipperHero = () => {
           </h1>
 
           <p className="text-base sm:text-lg text-slate-200 font-normal max-w-xl leading-relaxed">
-            Find verified vehicle capacity already moving toward your destination. BackhaulX AI matches your shipments with the best available trucks — faster, cheaper and greener.
+            Find verified vehicle capacity already moving toward your destination. BACKTRACKING AI matches your shipments with the best available trucks — faster, cheaper and greener.
           </p>
 
           <div className="flex flex-wrap items-center gap-3.5 pt-2">

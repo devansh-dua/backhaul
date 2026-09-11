@@ -95,7 +95,7 @@ export const AIRecommendationCard = ({ recommendationData, onAccept, onReject })
       {data.reasons && data.reasons.length > 0 && (
         <div>
           <div className="text-[11px] font-extrabold uppercase tracking-wider text-slate-500 mb-2 font-outfit">
-            WHY BACKHAULX RECOMMENDS THIS
+            WHY BACKTRACKING RECOMMENDS THIS
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs font-semibold text-slate-700">
             {data.reasons.map((r, idx) => (

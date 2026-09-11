@@ -1,6 +1,7 @@
 import { CarrierNavbar } from '../../components/Navbar';
 import { useAuth } from '../../context/AuthContext';
 import { ShieldCheck, Star } from 'lucide-react';
+import { TrustProfileCard } from '../../components/TrustProfileCard';
 
 export const CarrierProfile = () => {
   const { user } = useAuth();
@@ -26,24 +27,7 @@ export const CarrierProfile = () => {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 pt-6 border-t border-slate-200/80">
-            <div className="glass-card p-5">
-              <div className="text-xs font-bold uppercase tracking-wider text-slate-500 font-outfit">Carrier Rating</div>
-              <div className="text-xl font-extrabold text-slate-900 font-outfit flex items-center gap-1.5 mt-2">
-                <Star size={18} className="text-amber-500 fill-amber-500" /> 4.9 / 5.0
-              </div>
-            </div>
-
-            <div className="glass-card p-5">
-              <div className="text-xs font-bold uppercase tracking-wider text-slate-500 font-outfit">Completed Trips</div>
-              <div className="text-xl font-extrabold text-slate-900 font-outfit mt-2">34 Deliveries</div>
-            </div>
-
-            <div className="glass-card p-5">
-              <div className="text-xs font-bold uppercase tracking-wider text-slate-500 font-outfit">On-Time Score</div>
-              <div className="text-xl font-extrabold text-emerald-600 font-outfit mt-2">98.5%</div>
-            </div>
-          </div>
+          <TrustProfileCard userId={user?._id || user?.id} role="CARRIER" />
         </div>
       </main>
     </div>

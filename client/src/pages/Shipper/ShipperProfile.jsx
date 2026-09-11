@@ -1,6 +1,7 @@
 import { ShipperNavbar } from '../../components/Navbar';
 import { useAuth } from '../../context/AuthContext';
 import { ShieldCheck } from 'lucide-react';
+import { TrustProfileCard } from '../../components/TrustProfileCard';
 
 export const ShipperProfile = () => {
   const { user } = useAuth();
@@ -25,6 +26,8 @@ export const ShipperProfile = () => {
               <p className="text-xs sm:text-sm text-slate-600 font-medium mt-1">{user?.company || 'Jaipur Auto Components Ltd'}</p>
             </div>
           </div>
+
+          <TrustProfileCard userId={user?._id || user?.id} role="SHIPPER" />
         </div>
       </main>
     </div>

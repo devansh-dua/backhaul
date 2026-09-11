@@ -15,6 +15,10 @@ const aiRoutes = require('./routes/ai.routes');
 
 const driverRoutes = require('./routes/driver.routes');
 
+const notificationRoutes = require('./routes/notification.routes');
+
+const trustRoutes = require('./routes/trust.routes');
+
 const app = express();
 
 // Middleware
@@ -29,7 +33,7 @@ app.use(express.urlencoded({ extended: true }));
 app.get('/api/health', (req, res) => {
   res.json({
     success: true,
-    message: 'BACKHAULX API is running smoothly',
+    message: 'BACKTRACKING API is running smoothly',
     timestamp: new Date()
   });
 });
@@ -45,8 +49,11 @@ app.use('/api/trips', tripRoutes);
 app.use('/api/tracking', trackingRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/pod', podRoutes);
+app.use('/api/delivery', podRoutes);
 app.use('/api/ratings', ratingRoutes);
+app.use('/api/trust', trustRoutes);
 app.use('/api/ai', aiRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 // Centralized Error Handling Middleware
 app.use((err, req, res, next) => {

@@ -45,7 +45,7 @@ export const Register = () => {
               <Truck size={20} />
             </div>
             <span className="text-xl font-extrabold font-outfit tracking-tight bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent">
-              BACKHAULX
+              BACKTRACKING
             </span>
           </Link>
 

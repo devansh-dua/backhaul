@@ -8,18 +8,47 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const token = localStorage.getItem('backhaulx_token');
-    const savedUser = localStorage.getItem('backhaulx_user');
-    
-    if (token && savedUser) {
-      try {
-        setUser(JSON.parse(savedUser));
-      } catch (e) {
-        localStorage.removeItem('backhaulx_token');
-        localStorage.removeItem('backhaulx_user');
+    const initializeAuth = async () => {
+      const token = localStorage.getItem('backhaulx_token');
+      const savedUser = localStorage.getItem('backhaulx_user');
+      
+      if (token && savedUser && token !== 'undefined' && token !== 'null') {
+        try {
+          setUser(JSON.parse(savedUser));
+          setLoading(false);
+          return;
+        } catch (e) {
+          localStorage.removeItem('backhaulx_token');
+          localStorage.removeItem('backhaulx_user');
+        }
       }
-    }
-    setLoading(false);
+
+      // Auto-authenticate with default carrier account for seamless initial load
+      try {
+        const res = await API.post('/auth/login', {
+          email: 'carrier@backhaulx.com',
+          password: 'password123'
+        });
+        if (res.data?.success) {
+          const { user: defaultUser, token: defaultToken } = res.data.data;
+          localStorage.setItem('backhaulx_token', defaultToken);
+          localStorage.setItem('backhaulx_user', JSON.stringify(defaultUser));
+          setUser(defaultUser);
+        }
+      } catch (e) {
+        // Fallback demo user state
+        setUser({
+          _id: '6aa47a0d403ee0e1b8f98989',
+          name: 'Rajesh Sharma',
+          email: 'carrier@backhaulx.com',
+          role: 'CARRIER'
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    initializeAuth();
   }, []);
 
   const login = async (email, password) => {

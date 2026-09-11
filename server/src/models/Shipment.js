@@ -22,7 +22,7 @@ const shipmentSchema = new mongoose.Schema({
   deadline: { type: Date, required: true },
   offeredPriceINR: { type: Number, required: true },
   specialRequirements: [{ type: String }],
-  status: { type: String, enum: ['POSTED', 'MATCHED', 'BOOKED', 'PICKED_UP', 'IN_TRANSIT', 'DELIVERED', 'CANCELLED'], default: 'POSTED' }
+  status: { type: String, enum: ['POSTED', 'MATCHED', 'BOOKED', 'PICKED_UP', 'IN_TRANSIT', 'DELIVERY_OTP_REQUESTED', 'DELIVERED', 'CANCELLED'], default: 'POSTED' }
 }, { timestamps: true });
 
 module.exports = mongoose.model('Shipment', shipmentSchema);

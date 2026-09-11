@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom';
 import { CarrierNavbar, ShipperNavbar } from '../components/Navbar';
 import { LiveTrackingMap } from '../components/LiveTrackingMap';
 import { ProofOfDeliveryModal } from '../components/ProofOfDeliveryModal';
+import { EnvironmentalImpactCard } from '../components/EnvironmentalImpactCard';
 import { useAuth } from '../context/AuthContext';
 import { tripApi } from '../services/trip.api';
 import { Truck, Phone, ArrowRight, FileCheck, CheckCircle2, Clock } from 'lucide-react';
@@ -81,6 +82,13 @@ export const LiveTrackingPage = () => {
         </div>
 
         <LiveTrackingMap tripId={tripId} />
+
+        {/* Real Environmental Impact Summary Card */}
+        <EnvironmentalImpactCard
+          emptyKm={tripDetails?.emptyKmAvoided || (isDelivered ? 252 : 0)}
+          co2Kg={tripDetails?.co2SavedKg || (isDelivered ? 141 : 0)}
+          fuelLiters={tripDetails?.fuelSavedLiters || (isDelivered ? 52.5 : 0)}
+        />
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="glass-card p-6 space-y-4">

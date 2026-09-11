@@ -3,10 +3,16 @@ const Match = require('../models/Match');
 
 exports.acceptMatch = async (req, res) => {
   try {
-    const trip = await matchingService.acceptMatch(req.user.id, req.body);
+    const io = req.app.get('io');
+    const matchData = {
+      ...req.body,
+      shipmentId: req.params.shipmentId || req.body.shipmentId || req.body.id
+    };
+    const trip = await matchingService.acceptMatch(req.user.id, matchData, io);
     res.status(201).json({ success: true, data: trip });
   } catch (err) {
-    res.status(400).json({ success: false, message: err.message });
+    const statusCode = err.message.includes('no longer available') ? 409 : 400;
+    res.status(statusCode).json({ success: false, message: err.message });
   }
 };
 

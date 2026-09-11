@@ -15,7 +15,7 @@ export const Footer = () => {
                 <Truck size={18} />
               </div>
               <span className="text-xl font-black text-white font-outfit tracking-tight">
-                BACKHAUL<span className="text-blue-500">X</span>
+                BACKTRACKING
               </span>
             </Link>
 
@@ -70,7 +70,7 @@ export const Footer = () => {
         {/* Bottom Bar: Copyright & Socials */}
         <div className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500 font-medium">
           <div>
-            © 2024 BackhaulX. All rights reserved.
+            © 2026 BACKTRACKING. All rights reserved.
           </div>
 
           <div className="text-slate-400 font-outfit font-semibold text-center">

@@ -42,12 +42,12 @@ export const Login = () => {
               <Truck size={20} />
             </div>
             <span className="text-xl font-extrabold font-outfit tracking-tight bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent">
-              BACKHAULX
+              BACKTRACKING
             </span>
           </Link>
 
           <h2 className="text-2xl font-extrabold text-slate-900 font-outfit tracking-tight">Welcome Back</h2>
-          <p className="text-xs sm:text-sm text-slate-600 font-normal">Sign in to access BACKHAULX Intelligence Engine</p>
+          <p className="text-xs sm:text-sm text-slate-600 font-normal">Sign in to access BACKTRACKING Intelligence Engine</p>
         </div>
 
         {error && (

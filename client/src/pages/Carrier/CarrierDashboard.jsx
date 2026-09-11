@@ -9,7 +9,7 @@ import { AcceptRejectCard } from '../../components/AcceptRejectCard';
 import { analyticsApi } from '../../services/analytics.api';
 import { shipmentApi } from '../../services/shipment.api';
 import { matchApi } from '../../services/match.api';
-import { vehicleApi } from '../../services/vehicle.api';
+import { useSocket } from '../../context/SocketContext';
 import { 
   Truck, Package, Fuel, BarChart3, Leaf, Sparkles, 
   ArrowRight, ChevronRight, Calendar, ArrowUpRight, CheckCircle2, ShieldCheck, Inbox
@@ -17,6 +17,7 @@ import {
 
 export const CarrierDashboard = () => {
   const navigate = useNavigate();
+  const { acceptShipment } = useSocket();
   const opportunitiesRef = useRef(null);
 
   const [loading, setLoading] = useState(true);
@@ -81,17 +82,15 @@ export const CarrierDashboard = () => {
   };
 
   const handleAcceptLoad = async (oppData) => {
-    try {
-      const res = await matchApi.acceptMatch({
-        shipmentId: oppData?.id,
-        grossRevenueINR: oppData?.revenue || 0,
-        detourKm: parseInt(oppData?.detour) || 8,
-        totalWeight: parseFloat(oppData?.weight) || 2.5
-      });
-      if (res.data && res.data.success && res.data.data) {
-        navigate(`/tracking/${res.data.data._id}`);
-      }
-    } catch (e) {
+    const res = await acceptShipment(oppData?.id, {
+      grossRevenueINR: oppData?.revenue || 0,
+      detourKm: parseInt(oppData?.detour) || 8,
+      totalWeight: parseFloat(oppData?.weight) || 2.5
+    });
+
+    if (res.success && res.trip) {
+      navigate(`/tracking/${res.trip._id}`);
+    } else {
       navigate('/carrier/trips');
     }
   };

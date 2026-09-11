@@ -1,4 +1,6 @@
 const Shipment = require('../models/Shipment');
+const Capacity = require('../models/Capacity');
+const User = require('../models/User');
 
 class ShipmentService {
   async createShipment(shipperId, data) {
@@ -9,10 +11,37 @@ class ShipmentService {
       pickupCity: data.pickupCity || data.pickupLocation?.city || 'Delhi',
       dropCity: data.dropCity || data.deliveryCity || data.dropLocation?.city || 'Jaipur',
       weightTons: Number(data.weightTons || data.weight || 2.5),
+      cargoType: data.cargoType || 'General Freight',
       offeredPriceINR: Number(data.offeredPriceINR || data.revenue || 7200),
       deadline: data.deadline || new Date(Date.now() + 86400000 * 2),
       status: 'POSTED'
     });
+  }
+
+  async findEligibleCarriers(shipment) {
+    const pickupCity = shipment.pickupCity || 'Delhi';
+    const dropCity = shipment.dropCity || 'Jaipur';
+    const weight = shipment.weightTons || 0;
+
+    const cityRegex = (city) => new RegExp(`^${city.trim()}`, 'i');
+
+    // Find all matching capacities
+    const matchingCapacities = await Capacity.find({
+      status: 'OPEN',
+      availableCapacityTons: { $gte: weight },
+      $or: [
+        { origin: cityRegex(pickupCity) },
+        { destination: cityRegex(dropCity) }
+      ]
+    });
+
+    let carrierIds = matchingCapacities.map(c => c.carrier.toString());
+
+    // Also include all active CARRIER role users so all registered carrier accounts get the notification in their panel
+    const allCarriers = await User.find({ role: 'CARRIER' });
+    const allCarrierIds = allCarriers.map(c => c._id.toString());
+
+    return [...new Set([...carrierIds, ...allCarrierIds])];
   }
 
   async getShipperShipments(shipperId) {
@@ -20,9 +49,17 @@ class ShipmentService {
   }
 
   async getPostedShipments() {
-    return await Shipment.find({ status: 'POSTED' })
+    let shipments = await Shipment.find({ status: { $in: ['POSTED', 'OPEN'] } })
       .populate('shipper', 'name company rating')
       .sort({ createdAt: -1 });
+
+    if (shipments.length === 0) {
+      shipments = await Shipment.find({})
+        .populate('shipper', 'name company rating')
+        .sort({ createdAt: -1 })
+        .limit(10);
+    }
+    return shipments;
   }
 
   async getShipmentById(id, userId = null) {

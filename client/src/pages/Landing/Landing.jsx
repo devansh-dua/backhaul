@@ -27,7 +27,7 @@ export const Landing = () => {
         </h1>
 
         <p style={{ fontSize: '1.2rem', color: '#475569', maxWidth: '780px', margin: '0 auto 2.5rem auto', lineHeight: 1.6, fontWeight: '500' }}>
-          BACKHAULX matches compatible return shipment demand with unused vehicle capacity on already-planned journeys. Don't just find a return load—find the most profitable way to use your truck.
+          BACKTRACKING matches compatible return shipment demand with unused vehicle capacity on already-planned journeys. Don't just find a return load—find the most profitable way to use your truck.
         </p>
 
         <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', alignItems: 'center' }}>
@@ -73,7 +73,7 @@ export const Landing = () => {
           </div>
 
           <div className="glass-card" style={{ padding: '2rem', borderTop: '4px solid #059669', background: '#f0fdf4' }}>
-            <h3 style={{ fontSize: '1.25rem', color: '#059669', marginBottom: '1rem', fontWeight: '800' }}>BACKHAULX AI Engine</h3>
+            <h3 style={{ fontSize: '1.25rem', color: '#059669', marginBottom: '1rem', fontWeight: '800' }}>BACKTRACKING AI Engine</h3>
             <div style={{ fontSize: '0.95rem', color: '#166534', display: 'flex', flexDirection: 'column', gap: '0.75rem', fontWeight: '600' }}>
               <div>✅ AI discovers compatible en-route shipments</div>
               <div>✅ Multi-load knapsack combination optimizes capacity</div>
@@ -92,7 +92,7 @@ export const Landing = () => {
       {/* 4-Step How It Works Grid */}
       <section style={{ padding: '4rem 2rem', maxWidth: '1100px', margin: '0 auto' }}>
         <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
-          <h2 style={{ fontSize: '2.4rem', fontWeight: '800', color: '#0f172a' }}>How BACKHAULX Works</h2>
+          <h2 style={{ fontSize: '2.4rem', fontWeight: '800', color: '#0f172a' }}>How BACKTRACKING Works</h2>
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.5rem' }}>
@@ -131,7 +131,7 @@ export const Landing = () => {
           Turn unused truck capacity into your next source of net profit.
         </p>
         <Link to="/register" style={{ padding: '0.85rem 2.5rem', background: 'linear-gradient(135deg, #059669, #047857)', color: '#fff', borderRadius: '12px', fontWeight: '700', fontSize: '1.1rem', display: 'inline-flex', alignItems: 'center', gap: '8px', boxShadow: '0 8px 25px rgba(5, 150, 105, 0.3)' }}>
-          Launch BACKHAULX Demo <ChevronRight size={20} />
+          Launch BACKTRACKING Demo <ChevronRight size={20} />
         </Link>
       </section>
     </div>

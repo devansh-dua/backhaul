@@ -8,6 +8,8 @@ import { capacityApi } from '../../services/capacity.api';
 import { matchApi } from '../../services/match.api';
 import { shipmentApi } from '../../services/shipment.api';
 import { analyticsApi } from '../../services/analytics.api';
+import { TrustedPartnerBadge } from '../../components/TrustedPartnerBadge';
+import { EnvironmentalImpactCard } from '../../components/EnvironmentalImpactCard';
 import { 
   Sparkles, Truck, Plus, ArrowRight, ShieldCheck, CheckCircle2, 
   MapPin, Clock, ArrowUpRight, Navigation, TrendingUp, Zap, Leaf, Inbox
@@ -323,6 +325,7 @@ export const ShipperDashboard = () => {
                                 <ShieldCheck size={12} /> Verified Carrier
                               </span>
                             )}
+                            <TrustedPartnerBadge completedTripsTogether={vehicle.completedTripsTogether || 0} isTrustedPartner={vehicle.isTrustedPartner || false} compact={true} />
                           </div>
 
                           <div className="flex items-center gap-2">

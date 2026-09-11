@@ -8,7 +8,7 @@ const tripSchema = new mongoose.Schema({
   shipments: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Shipment' }],
   origin: { type: String, required: true },
   destination: { type: String, required: true },
-  status: { type: String, enum: ['BOOKED', 'PICKED_UP', 'IN_TRANSIT', 'DELIVERED', 'CANCELLED'], default: 'BOOKED' },
+  status: { type: String, enum: ['BOOKED', 'PICKED_UP', 'IN_TRANSIT', 'DELIVERY_OTP_REQUESTED', 'DELIVERED', 'COMPLETED', 'CANCELLED'], default: 'BOOKED' },
   currentPosition: {
     lat: { type: Number, default: 28.6139 },
     lng: { type: Number, default: 77.2090 },
@@ -19,6 +19,8 @@ const tripSchema = new mongoose.Schema({
   grossRevenueINR: { type: Number, required: true },
   netContributionINR: { type: Number, required: true },
   detourKm: { type: Number, default: 0 },
+  emptyKmAvoided: { type: Number, default: 0 },
+  fuelSavedLiters: { type: Number, default: 0 },
   co2SavedKg: { type: Number, default: 0 },
   proofOfDelivery: { type: mongoose.Schema.Types.ObjectId, ref: 'ProofOfDelivery' }
 }, { timestamps: true });

@@ -1,4 +1,6 @@
-require('dotenv').config();
+const path = require('path');
+require('dotenv').config({ path: path.join(__dirname, '../.env') });
+require('dotenv').config({ path: path.join(__dirname, '.env') });
 const http = require('http');
 const { Server } = require('socket.io');
 
@@ -19,14 +21,18 @@ const io = new Server(server, {
   allowEIO3: true
 });
 
-// Initialize Socket.IO tracking events
+// Attach Socket.IO instance to app for controller access
+app.set('io', io);
+
+// Initialize Socket.IO tracking and notification events
 initTrackingSocket(io);
 
 // Connect DB & Start Server
 connectDB().then(() => {
   server.listen(PORT, () => {
-    console.log(`🚀 BACKHAULX Server running on http://localhost:${PORT}`);
+    console.log(`🚀 BACKTRACKING Server running on http://localhost:${PORT}`);
   });
 }).catch(err => {
   console.error('Failed to start server:', err);
 });
+

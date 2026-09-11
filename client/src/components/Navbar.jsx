@@ -1,5 +1,6 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { NotificationCenter } from './NotificationCenter';
 import { Truck, Package, Activity, Compass, Cpu, Sliders, BarChart3, LogOut, ArrowRightLeft, ShieldCheck } from 'lucide-react';
 
 export const LandingNavbar = () => {
@@ -10,7 +11,7 @@ export const LandingNavbar = () => {
           <Truck size={20} />
         </div>
         <span style={{ fontSize: '1.4rem', fontWeight: '800', color: '#0f172a', letterSpacing: '-0.03em' }}>
-          BACKHAUL<span style={{ color: '#2563eb' }}>X</span>
+          BACKTRACKING
         </span>
       </Link>
 
@@ -66,7 +67,7 @@ export const CarrierNavbar = () => {
             </div>
             <div className="flex items-baseline gap-1.5">
               <span className="text-xl font-black text-slate-900 font-outfit tracking-tight">
-                BACKHAUL<span className="text-blue-600">X</span>
+                BACKTRACKING
               </span>
               <span className="bg-slate-100 text-slate-500 font-bold text-[10px] tracking-wider px-2 py-0.5 rounded-full uppercase font-outfit border border-slate-200/80">
                 CARRIER
@@ -108,16 +109,8 @@ export const CarrierNavbar = () => {
             <span>Switch to Shipper</span>
           </button>
 
-          {/* Notification Bell */}
-          <button
-            className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200/80 text-slate-600 flex items-center justify-center relative transition-colors"
-            title="Notifications"
-          >
-            <div className="w-2 h-2 rounded-full bg-red-500 absolute top-1.5 right-1.5 ring-2 ring-white"></div>
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-            </svg>
-          </button>
+          {/* Notification Center with Socket Status & Bell */}
+          <NotificationCenter />
 
           {/* Profile User Dropdown Pill */}
           <div className="flex items-center gap-2 bg-slate-50 hover:bg-slate-100 border border-slate-200/80 rounded-full pl-1 pr-2.5 py-1 transition-all">
@@ -176,7 +169,7 @@ export const ShipperNavbar = () => {
             </div>
             <div className="flex items-baseline gap-1.5">
               <span className="text-xl font-black text-slate-900 font-outfit tracking-tight">
-                BACKHAUL<span className="text-emerald-600">X</span>
+                BACKTRACKING
               </span>
               <span className="bg-emerald-50 text-emerald-700 font-bold text-[10px] tracking-wider px-2 py-0.5 rounded-full uppercase font-outfit border border-emerald-200/80">
                 SHIPPER
@@ -218,16 +211,8 @@ export const ShipperNavbar = () => {
             <span>Switch to Carrier</span>
           </button>
 
-          {/* Notification Bell */}
-          <button
-            className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200/80 text-slate-600 flex items-center justify-center relative transition-colors"
-            title="Notifications"
-          >
-            <div className="w-2 h-2 rounded-full bg-red-500 absolute top-1.5 right-1.5 ring-2 ring-white"></div>
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-            </svg>
-          </button>
+          {/* Notification Center with Socket Status & Bell */}
+          <NotificationCenter />
 
           {/* Profile User Dropdown Pill */}
           <div className="flex items-center gap-2 bg-slate-50 hover:bg-slate-100 border border-slate-200/80 rounded-full pl-1 pr-2.5 py-1 transition-all">
