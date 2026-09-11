@@ -33,9 +33,11 @@ export const BookingNotificationModal = () => {
               REAL-TIME BOOKING PROPOSAL
             </span>
           </div>
-          <span className="badge-emerald font-semibold">
-            Match {incomingRequest.matchScore || 94}%
-          </span>
+          {incomingRequest.matchScore && (
+            <span className="badge-emerald font-semibold">
+              Match {incomingRequest.matchScore}%
+            </span>
+          )}
         </div>
 
         <div className="space-y-2.5">
@@ -46,9 +48,9 @@ export const BookingNotificationModal = () => {
           <div className="glass-card p-4 flex items-center justify-between bg-slate-50/80">
             <div>
               <div className="flex items-center gap-2 text-base font-extrabold text-slate-900 font-outfit">
-                <span>{incomingRequest.pickupCity || 'Delhi'}</span>
+                <span>{incomingRequest.pickupCity || incomingRequest.origin || '—'}</span>
                 <ArrowRight size={16} className="text-indigo-600" />
-                <span>{incomingRequest.dropCity || 'Jaipur'}</span>
+                <span>{incomingRequest.dropCity || incomingRequest.destination || '—'}</span>
               </div>
               <p className="text-xs text-slate-500 font-normal mt-0.5">
                 {incomingRequest.route || 'Interstate Corridor'}
@@ -56,7 +58,7 @@ export const BookingNotificationModal = () => {
             </div>
             <div className="text-right">
               <div className="text-base font-extrabold text-slate-900 font-outfit">
-                ₹{(incomingRequest.offeredPriceINR || incomingRequest.price || 14500).toLocaleString('en-IN')}
+                ₹{(incomingRequest.offeredPriceINR || incomingRequest.price || 0).toLocaleString('en-IN')}
               </div>
               <span className="badge-emerald text-[10px]">
                 Guaranteed Payout
@@ -69,13 +71,13 @@ export const BookingNotificationModal = () => {
           <div className="glass-card p-3.5 bg-slate-50/50">
             <span className="text-slate-500 font-normal">Cargo Payload</span>
             <p className="font-extrabold text-slate-900 font-outfit text-sm mt-0.5">
-              {incomingRequest.weightTons || 3.5} Tons
+              {incomingRequest.weightTons || incomingRequest.weight || 0} Tons
             </p>
           </div>
           <div className="glass-card p-3.5 bg-slate-50/50">
             <span className="text-slate-500 font-normal">Corridor Detour</span>
             <p className="font-extrabold text-amber-600 font-outfit text-sm mt-0.5">
-              +{incomingRequest.detourKm || 18} km
+              +{incomingRequest.detourKm || 0} km
             </p>
           </div>
         </div>

@@ -1,29 +1,26 @@
 import { useState } from 'react';
-import { Cpu, CheckCircle2, XCircle, ShieldCheck } from 'lucide-react';
+import { Cpu, CheckCircle2, XCircle, ShieldCheck, Sparkles } from 'lucide-react';
 
 export const AIRecommendationCard = ({ recommendationData, onAccept, onReject }) => {
   const [loading, setLoading] = useState(false);
 
-  const data = recommendationData || {
-    truck: 'RJ-104',
-    route: 'Delhi → Jaipur',
-    remainingCapacityTons: 7.8,
-    driverHoursAvailable: '6h 20m',
-    grossRevenueINR: 21700,
-    estimatedCostINR: 2800,
-    netContributionINR: 18900,
-    detourKm: 24,
-    confidenceScore: 94,
-    shipmentCount: 3,
-    reasons: [
-      'Route aligned along core Delhi-Jaipur corridor (NH 48)',
-      'Capacity compatible (fits inside remaining 7.8T)',
-      'Deadline achievable within scheduled transport window',
-      'Driver hours available (6h 20m safe margin)',
-      'Low detour (+24 km total detour distance)',
-      'Strong revenue density (₹72.6 / km net payout)'
-    ]
-  };
+  if (!recommendationData) {
+    return (
+      <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-xs space-y-3 text-center py-8">
+        <div className="w-10 h-10 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center mx-auto">
+          <Sparkles size={20} />
+        </div>
+        <h3 className="text-base font-extrabold text-slate-900 font-outfit">
+          AI Autopilot Plan Status
+        </h3>
+        <p className="text-xs text-slate-500 max-w-md mx-auto">
+          No active backhaul plan selected yet. Publish fleet capacity or post a shipment to run Gemini AI corridor optimization.
+        </p>
+      </div>
+    );
+  }
+
+  const data = recommendationData;
 
   const handleAcceptClick = async () => {
     setLoading(true);
@@ -32,85 +29,84 @@ export const AIRecommendationCard = ({ recommendationData, onAccept, onReject })
   };
 
   return (
-    <div className="glass-panel" style={{ padding: '1.75rem', border: '2px solid #2563eb', background: '#ffffff', position: 'relative', overflow: 'hidden' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem', borderBottom: '1px solid #e2e8f0', paddingBottom: '1rem' }}>
+    <div className="bg-white p-6 sm:p-7 rounded-2xl border-2 border-blue-600 shadow-sm space-y-5 relative overflow-hidden">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200/80 pb-4">
         <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '0.5rem' }}>
-            <span className="badge badge-purple">
+          <div className="flex items-center gap-2 mb-1.5">
+            <span className="badge-purple">
               <Cpu size={14} /> AI AUTOPILOT RECOMMENDATION
             </span>
-            <span className="badge badge-emerald">
-              <ShieldCheck size={14} /> {data.confidenceScore}% CONFIDENCE
+            <span className="badge-emerald font-semibold">
+              <ShieldCheck size={14} /> {data.confidenceScore || 94}% CONFIDENCE
             </span>
           </div>
 
-          <h2 style={{ fontSize: '1.5rem', color: '#0f172a', fontWeight: '800' }}>
-            Accept {data.shipmentCount} Compatible Corridor Shipments
+          <h2 className="text-xl sm:text-2xl font-black text-slate-900 font-outfit tracking-tight">
+            Accept {data.shipmentCount || 1} Compatible Corridor Shipment
           </h2>
-          <p style={{ color: '#64748b', fontSize: '0.9rem', marginTop: '4px', fontWeight: '600' }}>
-            Truck <strong style={{ color: '#0f172a' }}>{data.truck}</strong> | Route: <strong style={{ color: '#0f172a' }}>{data.route}</strong> | Available Capacity: <strong style={{ color: '#059669' }}>{data.remainingCapacityTons}T</strong>
+          <p className="text-xs sm:text-sm text-slate-600 font-medium mt-1">
+            Truck: <strong className="text-slate-900 font-bold">{data.truck || data.vehicle?.registrationNumber || 'Fleet Vehicle'}</strong> | Route: <strong className="text-slate-900 font-bold">{data.route || 'Corridor Route'}</strong> | Capacity: <strong className="text-emerald-700 font-bold">{data.remainingCapacityTons || data.vehicle?.availableCapacityTons || 0}T Available</strong>
           </p>
         </div>
 
-        {/* Action Buttons matching Landing style */}
-        <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
-          <button
-            onClick={onReject}
-            className="btn-secondary"
-            style={{ padding: '0.65rem 1.25rem' }}
-          >
-            <XCircle size={16} color="#64748b" /> REJECT
-          </button>
+        <div className="flex items-center gap-2">
+          {onReject && (
+            <button
+              onClick={onReject}
+              className="bg-white hover:bg-slate-50 text-slate-700 font-bold text-xs px-4 py-2.5 rounded-xl border border-slate-200 transition-all cursor-pointer font-outfit flex items-center gap-1"
+            >
+              <XCircle size={15} className="text-slate-400" /> REJECT
+            </button>
+          )}
           
           <button
             onClick={handleAcceptClick}
             disabled={loading}
-            className="btn-emerald"
-            style={{ padding: '0.65rem 1.75rem' }}
+            className="bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs px-6 py-2.5 rounded-xl transition-all shadow-xs cursor-pointer font-outfit flex items-center gap-1.5"
           >
-            <CheckCircle2 size={18} /> {loading ? 'ACCEPTING PLAN...' : 'ACCEPT PLAN'}
+            <CheckCircle2 size={16} /> {loading ? 'ACCEPTING PLAN...' : 'ACCEPT PLAN'}
           </button>
         </div>
       </div>
 
-      {/* Metrics Banner Grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '1rem', margin: '1.25rem 0', padding: '1rem', background: '#f8fafc', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+      <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 p-4 bg-slate-50 rounded-xl border border-slate-200/80 text-center font-outfit">
         <div>
-          <div style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: '700' }}>Gross Revenue</div>
-          <div style={{ fontSize: '1.25rem', fontWeight: '800', color: '#0f172a' }}>₹{data.grossRevenueINR.toLocaleString('en-IN')}</div>
+          <div className="text-[10px] font-bold text-slate-400 uppercase">Gross Revenue</div>
+          <div className="text-base font-black text-slate-900 mt-0.5">₹{(data.grossRevenueINR || 0).toLocaleString('en-IN')}</div>
         </div>
         <div>
-          <div style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: '700' }}>Est. Detour Cost</div>
-          <div style={{ fontSize: '1.25rem', fontWeight: '800', color: '#dc2626' }}>-₹{data.estimatedCostINR.toLocaleString('en-IN')}</div>
+          <div className="text-[10px] font-bold text-slate-400 uppercase">Est. Detour Cost</div>
+          <div className="text-base font-black text-red-600 mt-0.5">-₹{(data.estimatedCostINR || 0).toLocaleString('en-IN')}</div>
         </div>
         <div>
-          <div style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: '700' }}>Net Contribution</div>
-          <div style={{ fontSize: '1.3rem', fontWeight: '800', color: '#059669' }}>+₹{data.netContributionINR.toLocaleString('en-IN')}</div>
+          <div className="text-[10px] font-bold text-slate-400 uppercase">Net Contribution</div>
+          <div className="text-base font-black text-emerald-600 mt-0.5">+₹{(data.netContributionINR || 0).toLocaleString('en-IN')}</div>
         </div>
         <div>
-          <div style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: '700' }}>Total Detour</div>
-          <div style={{ fontSize: '1.25rem', fontWeight: '800', color: '#0284c7' }}>{data.detourKm} km</div>
+          <div className="text-[10px] font-bold text-slate-400 uppercase">Total Detour</div>
+          <div className="text-base font-black text-blue-600 mt-0.5">{data.detourKm || 0} km</div>
         </div>
         <div>
-          <div style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: '700' }}>Driver Hours</div>
-          <div style={{ fontSize: '1.25rem', fontWeight: '800', color: '#0f172a' }}>{data.driverHoursAvailable}</div>
+          <div className="text-[10px] font-bold text-slate-400 uppercase">Driver Hours</div>
+          <div className="text-base font-black text-slate-900 mt-0.5">{data.driverHoursAvailable || 'Safe'}</div>
         </div>
       </div>
 
-      {/* Key Reasons List */}
-      <div>
-        <div style={{ fontSize: '0.85rem', fontWeight: '800', color: '#0f172a', marginBottom: '0.5rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-          WHY BACKHAULX RECOMMENDS THIS
+      {data.reasons && data.reasons.length > 0 && (
+        <div>
+          <div className="text-[11px] font-extrabold uppercase tracking-wider text-slate-500 mb-2 font-outfit">
+            WHY BACKHAULX RECOMMENDS THIS
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs font-semibold text-slate-700">
+            {data.reasons.map((r, idx) => (
+              <div key={idx} className="flex items-start gap-2">
+                <CheckCircle2 size={15} className="text-emerald-600 shrink-0 mt-0.5" />
+                <span>{r}</span>
+              </div>
+            ))}
+          </div>
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '0.5rem' }}>
-          {data.reasons.map((r, idx) => (
-            <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.85rem', color: '#334155', fontWeight: '600' }}>
-              <CheckCircle2 size={16} color="#059669" style={{ flexShrink: 0 }} />
-              <span>{r}</span>
-            </div>
-          ))}
-        </div>
-      </div>
+      )}
     </div>
   );
 };

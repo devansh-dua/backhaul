@@ -1,12 +1,16 @@
 const express = require('express');
 const router = express.Router();
+const { protect } = require('../middleware/auth.middleware');
 const whatIfService = require('../services/ai/whatIf.service');
 const acceptRejectService = require('../services/ai/acceptReject.service');
 const loadOptimizer = require('../services/ai/loadOptimizer');
 const reoptimizationService = require('../services/ai/reoptimization.service');
 const Vehicle = require('../models/Vehicle');
 const Shipment = require('../models/Shipment');
-const { protect } = require('../middleware/auth.middleware');
+const aiController = require('../controllers/ai.controller');
+
+// AI Match Endpoint (Shipper matching real candidate capacity)
+router.post('/match', protect, aiController.matchShipment);
 
 // What-If Simulation Endpoint
 router.post('/what-if', protect, async (req, res) => {

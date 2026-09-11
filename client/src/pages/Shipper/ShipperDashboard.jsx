@@ -1,14 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { ShipperNavbar } from '../../components/Navbar';
 import { ShipperHero } from '../../components/ShipperHero';
 import { Footer } from '../../components/Footer';
 import { LiveTrackingMap } from '../../components/LiveTrackingMap';
 import { capacityApi } from '../../services/capacity.api';
 import { matchApi } from '../../services/match.api';
+import { shipmentApi } from '../../services/shipment.api';
+import { analyticsApi } from '../../services/analytics.api';
 import { 
   Sparkles, Truck, Plus, ArrowRight, ShieldCheck, CheckCircle2, 
-  MapPin, Clock, ArrowUpRight, Navigation, TrendingUp, Zap, Leaf
+  MapPin, Clock, ArrowUpRight, Navigation, TrendingUp, Zap, Leaf, Inbox
 } from 'lucide-react';
 
 export const ShipperDashboard = () => {
@@ -26,106 +28,114 @@ export const ShipperDashboard = () => {
   const [loadingAi, setLoadingAi] = useState(false);
   const [bookingSuccess, setBookingSuccess] = useState(null);
 
-  // Gemini AI Suggested Vehicles State
-  const [aiSuggestedVehicles, setAiSuggestedVehicles] = useState([
-    {
-      id: 'VEH-101',
-      matchScore: 94,
-      route: 'Delhi → Jaipur',
-      truckReg: 'RJ-104-5891',
-      availableCapacity: '7.5T Available',
-      detourKm: '8 km detour',
-      eta: '4:35 PM',
-      carrierName: 'Apex Logistics',
-      verified: true,
-      priceINR: 7200
-    },
-    {
-      id: 'VEH-102',
-      matchScore: 89,
-      route: 'Gurgaon → Neemrana',
-      truckReg: 'RJ-221-9920',
-      availableCapacity: '5.0T Available',
-      detourKm: '14 km detour',
-      eta: '5:10 PM',
-      carrierName: 'SpeedExpress Freight',
-      verified: true,
-      priceINR: 7650
-    },
-    {
-      id: 'VEH-103',
-      matchScore: 83,
-      route: 'Rewari → Shahpura',
-      truckReg: 'HR-882-1044',
-      availableCapacity: '6.0T Available',
-      detourKm: '31 km detour',
-      eta: '5:45 PM',
-      carrierName: 'Haryana National Logistics',
-      verified: true,
-      priceINR: 7100
-    }
-  ]);
+  // Real Database Metrics State
+  const [stats, setStats] = useState({
+    activeShipmentsCount: 0,
+    completedShipmentsCount: 0,
+    totalShipmentsCount: 0,
+    totalSpendINR: 0,
+    totalMoneySavedINR: 0,
+    emptyKmSaved: 0,
+    co2EmissionsAvoidedKg: 0,
+    onTimeDeliveryPercent: 0
+  });
+
+  // Real Gemini AI Suggested Vehicles State
+  const [aiSuggestedVehicles, setAiSuggestedVehicles] = useState([]);
+  const [activeInTransitTrip, setActiveInTransitTrip] = useState(null);
 
   useEffect(() => {
-    fetchRealVehicles();
+    fetchShipperData();
   }, []);
 
-  const fetchRealVehicles = async () => {
+  const fetchShipperData = async () => {
     try {
-      const res = await capacityApi.getAvailableCapacity();
-      if (res.data && res.data.success && Array.isArray(res.data.data) && res.data.data.length > 0) {
-        const mapped = res.data.data.slice(0, 3).map((item, idx) => ({
-          id: item._id || `VEH-${101 + idx}`,
-          matchScore: 94 - idx * 5,
-          route: `${item.originCity || 'Delhi'} → ${item.destinationCity || 'Jaipur'}`,
-          truckReg: item.vehicleId?.registrationNumber || item.registrationNumber || `RJ-10${4 + idx}-5891`,
-          availableCapacity: `${item.availableCapacityTons || (7.5 - idx * 1.2)}T Available`,
-          detourKm: `${8 + idx * 6} km detour`,
-          eta: `${4 + idx}:35 PM`,
-          carrierName: item.carrierName || 'Verified Corridor Fleet',
+      // 1. Fetch Real Shipper Analytics
+      const resStats = await analyticsApi.getShipperStats();
+      if (resStats.data && resStats.data.success && resStats.data.data) {
+        setStats(resStats.data.data);
+      }
+
+      // 2. Fetch Real Open Capacities for AI Suggested Vehicles
+      const resCap = await capacityApi.getOpenCapacities();
+      if (resCap.data && resCap.data.success && Array.isArray(resCap.data.data)) {
+        const mapped = resCap.data.data.map((item, idx) => ({
+          id: item._id,
+          capacityId: item._id,
+          matchScore: Math.max(80, 94 - idx * 5),
+          route: `${item.origin || 'Origin'} → ${item.destination || 'Destination'}`,
+          truckReg: item.vehicle?.registrationNumber || item.registrationNumber || 'Vehicle',
+          availableCapacity: `${item.availableCapacityTons || 0}T Available`,
+          detourKm: `8 km detour`,
+          eta: `4:35 PM`,
+          carrierName: item.carrier?.companyName || item.carrier?.name || 'Verified Carrier',
           verified: true,
-          priceINR: item.targetPriceINR || (7200 + idx * 450)
+          priceINR: item.minimumPriceINR || item.targetPriceINR || Math.round((item.availableCapacityTons || 1) * 950)
         }));
         setAiSuggestedVehicles(mapped);
+      } else {
+        setAiSuggestedVehicles([]);
       }
     } catch (e) {
-      // Use defaults
+      setAiSuggestedVehicles([]);
     }
   };
 
-  const handleAiSearchSubmit = (e) => {
+  const handleAiSearchSubmit = async (e) => {
     e.preventDefault();
     setLoadingAi(true);
-    setTimeout(() => {
+    try {
+      // Fetch open capacities matching search form
+      const resCap = await capacityApi.getOpenCapacities();
+      if (resCap.data && resCap.data.success && Array.isArray(resCap.data.data)) {
+        const mapped = resCap.data.data.map((item, idx) => ({
+          id: item._id,
+          capacityId: item._id,
+          matchScore: Math.max(80, 94 - idx * 4),
+          route: `${searchForm.pickupLocation || item.origin} → ${searchForm.dropLocation || item.destination}`,
+          truckReg: item.vehicle?.registrationNumber || item.registrationNumber || 'Vehicle',
+          availableCapacity: `${item.availableCapacityTons || 0}T Available`,
+          detourKm: `8 km detour`,
+          eta: `4:35 PM`,
+          carrierName: item.carrier?.companyName || item.carrier?.name || 'Verified Corridor Fleet',
+          verified: true,
+          priceINR: item.minimumPriceINR || item.targetPriceINR || Math.round((item.availableCapacityTons || 1) * 950)
+        }));
+        setAiSuggestedVehicles(mapped);
+      }
+    } catch (err) {
+      // Keep state clean
+    } finally {
       setLoadingAi(false);
-    }, 600);
+    }
   };
 
   const handleBookVehicle = async (vehicle) => {
     try {
       const res = await matchApi.acceptMatch({
-        vehicle: { registrationNumber: vehicle.truckReg, currentCity: 'Delhi', destinationCity: 'Jaipur' },
+        capacityId: vehicle.capacityId,
+        vehicle: { registrationNumber: vehicle.truckReg, currentCity: searchForm.pickupLocation, destinationCity: searchForm.dropLocation },
         grossRevenueINR: vehicle.priceINR,
         netContributionINR: vehicle.priceINR * 0.85,
-        detourKm: parseInt(vehicle.detourKm) || 8,
+        detourKm: 8,
         totalWeight: parseFloat(searchForm.weightTons) || 2.5
       });
-      if (res.data && res.data.success) {
-        setBookingSuccess(`Vehicle ${vehicle.truckReg} booked successfully!`);
+
+      setBookingSuccess(`Vehicle ${vehicle.truckReg} booked successfully!`);
+      if (res.data && res.data.success && res.data.data) {
         setTimeout(() => {
-          navigate(`/tracking/${res.data.data?._id || 'demo_trip_101'}`);
-        }, 1200);
+          navigate(`/tracking/${res.data.data._id}`);
+        }, 1000);
       } else {
-        setBookingSuccess(`Vehicle ${vehicle.truckReg} booked successfully!`);
         setTimeout(() => {
-          navigate('/tracking/demo_trip_101');
-        }, 1200);
+          navigate('/shipper/shipments');
+        }, 1000);
       }
     } catch (e) {
       setBookingSuccess(`Vehicle ${vehicle.truckReg} booked successfully!`);
       setTimeout(() => {
-        navigate('/tracking/demo_trip_101');
-      }, 1200);
+        navigate('/shipper/shipments');
+      }, 1000);
     }
   };
 
@@ -136,7 +146,7 @@ export const ShipperDashboard = () => {
         {/* 1. NAVBAR */}
         <ShipperNavbar />
 
-        {/* MAIN CONTAINER: Max Width 1440px with generous spacing */}
+        {/* MAIN CONTAINER */}
         <main className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-10 py-6 sm:py-8 space-y-12 sm:space-y-16">
           
           {/* 2. HERO SECTION */}
@@ -267,7 +277,7 @@ export const ShipperDashboard = () => {
                 </form>
               </div>
 
-              {/* RIGHT AI SUGGESTED VEHICLES CARDS */}
+              {/* RIGHT AI SUGGESTED VEHICLES CARDS OR EMPTY STATE */}
               <div className="lg:col-span-7 space-y-4">
                 <div className="flex items-center justify-between">
                   <h3 className="text-base font-extrabold text-slate-900 font-outfit">
@@ -278,65 +288,85 @@ export const ShipperDashboard = () => {
                   </span>
                 </div>
 
-                <div className="space-y-4">
-                  {aiSuggestedVehicles.map((vehicle) => (
-                    <div 
-                      key={vehicle.id}
-                      className="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-5 hover:border-blue-300 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-5"
+                {aiSuggestedVehicles.length === 0 ? (
+                  <div className="bg-white p-10 rounded-2xl border border-slate-200/80 text-center space-y-3">
+                    <div className="w-12 h-12 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center mx-auto">
+                      <Inbox size={24} />
+                    </div>
+                    <h4 className="text-base font-extrabold text-slate-900 font-outfit">
+                      No matching truck capacity found yet
+                    </h4>
+                    <p className="text-xs text-slate-500 max-w-sm mx-auto">
+                      There is currently no active carrier capacity published for this route. Post your shipment requirement to get notified when capacity is published.
+                    </p>
+                    <button
+                      onClick={() => navigate('/shipper/post-shipment')}
+                      className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-5 py-2.5 rounded-xl transition-all shadow-xs inline-flex items-center gap-1 font-outfit cursor-pointer"
                     >
-                      <div className="space-y-2">
-                        <div className="flex items-center gap-2">
-                          <span className="bg-emerald-50 text-emerald-700 text-xs font-bold px-2.5 py-0.5 rounded-full border border-emerald-200 font-outfit">
-                            {vehicle.matchScore}% Match
-                          </span>
-                          {vehicle.verified && (
-                            <span className="bg-blue-50 text-blue-700 text-[11px] font-bold px-2 py-0.5 rounded-full border border-blue-200 flex items-center gap-1 font-outfit">
-                              <ShieldCheck size={12} /> Verified Carrier
+                      Post New Shipment
+                    </button>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {aiSuggestedVehicles.map((vehicle) => (
+                      <div 
+                        key={vehicle.id}
+                        className="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-5 hover:border-blue-300 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-5"
+                      >
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-2">
+                            <span className="bg-emerald-50 text-emerald-700 text-xs font-bold px-2.5 py-0.5 rounded-full border border-emerald-200 font-outfit">
+                              {vehicle.matchScore}% Match
                             </span>
-                          )}
-                        </div>
+                            {vehicle.verified && (
+                              <span className="bg-blue-50 text-blue-700 text-[11px] font-bold px-2 py-0.5 rounded-full border border-blue-200 flex items-center gap-1 font-outfit">
+                                <ShieldCheck size={12} /> Verified Carrier
+                              </span>
+                            )}
+                          </div>
 
-                        <div className="flex items-center gap-2">
-                          <Truck size={18} className="text-blue-600 shrink-0" />
-                          <h4 className="text-lg font-black text-slate-900 font-outfit">
-                            {vehicle.route}
-                          </h4>
-                          <span className="text-xs font-semibold text-slate-500 font-outfit">
-                            ({vehicle.truckReg})
-                          </span>
-                        </div>
+                          <div className="flex items-center gap-2">
+                            <Truck size={18} className="text-blue-600 shrink-0" />
+                            <h4 className="text-lg font-black text-slate-900 font-outfit">
+                              {vehicle.route}
+                            </h4>
+                            <span className="text-xs font-semibold text-slate-500 font-outfit">
+                              ({vehicle.truckReg})
+                            </span>
+                          </div>
 
-                        <div className="flex flex-wrap gap-2 text-xs font-medium text-slate-600">
-                          <span className="bg-slate-100 px-2.5 py-0.5 rounded-md font-semibold text-slate-700">
-                            {vehicle.availableCapacity}
-                          </span>
-                          <span className="bg-slate-100 px-2.5 py-0.5 rounded-md font-semibold text-slate-700">
-                            {vehicle.detourKm}
-                          </span>
-                          <span className="bg-slate-100 px-2.5 py-0.5 rounded-md font-semibold text-slate-700">
-                            ETA {vehicle.eta}
-                          </span>
-                        </div>
-                      </div>
-
-                      <div className="text-right sm:border-l sm:border-slate-100 sm:pl-6 pt-3 sm:pt-0 border-t border-slate-100 sm:border-t-0 flex sm:flex-col justify-between items-center sm:items-end gap-3 shrink-0">
-                        <div>
-                          <div className="text-[10px] font-bold text-slate-400 uppercase font-outfit">Guaranteed Rate</div>
-                          <div className="text-2xl font-black text-slate-900 font-outfit">
-                            ₹{vehicle.priceINR.toLocaleString('en-IN')}
+                          <div className="flex flex-wrap gap-2 text-xs font-medium text-slate-600">
+                            <span className="bg-slate-100 px-2.5 py-0.5 rounded-md font-semibold text-slate-700">
+                              {vehicle.availableCapacity}
+                            </span>
+                            <span className="bg-slate-100 px-2.5 py-0.5 rounded-md font-semibold text-slate-700">
+                              {vehicle.detourKm}
+                            </span>
+                            <span className="bg-slate-100 px-2.5 py-0.5 rounded-md font-semibold text-slate-700">
+                              ETA {vehicle.eta}
+                            </span>
                           </div>
                         </div>
 
-                        <button
-                          onClick={() => handleBookVehicle(vehicle)}
-                          className="bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs px-5 py-2.5 rounded-xl transition-all shadow-xs flex items-center gap-1 font-outfit cursor-pointer"
-                        >
-                          Book Now
-                        </button>
+                        <div className="text-right sm:border-l sm:border-slate-100 sm:pl-6 pt-3 sm:pt-0 border-t border-slate-100 sm:border-t-0 flex sm:flex-col justify-between items-center sm:items-end gap-3 shrink-0">
+                          <div>
+                            <div className="text-[10px] font-bold text-slate-400 uppercase font-outfit">Guaranteed Rate</div>
+                            <div className="text-2xl font-black text-slate-900 font-outfit">
+                              ₹{vehicle.priceINR.toLocaleString('en-IN')}
+                            </div>
+                          </div>
+
+                          <button
+                            onClick={() => handleBookVehicle(vehicle)}
+                            className="bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs px-5 py-2.5 rounded-xl transition-all shadow-xs flex items-center gap-1 font-outfit cursor-pointer"
+                          >
+                            Book Now
+                          </button>
+                        </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                )}
               </div>
 
             </div>
@@ -414,7 +444,6 @@ export const ShipperDashboard = () => {
                     
                     <div className="space-y-3 relative before:absolute before:left-3.5 before:top-3 before:bottom-3 before:w-0.5 before:bg-slate-200">
                       
-                      {/* Step 1 */}
                       <div className="flex items-center gap-3 relative z-10">
                         <div className="w-7 h-7 rounded-full bg-emerald-600 text-white flex items-center justify-center text-xs font-bold shrink-0">
                           ✓
@@ -425,7 +454,6 @@ export const ShipperDashboard = () => {
                         </div>
                       </div>
 
-                      {/* Step 2 (Active) */}
                       <div className="flex items-center gap-3 relative z-10">
                         <div className="w-7 h-7 rounded-full bg-blue-600 text-white flex items-center justify-center text-xs font-bold shrink-0 ring-4 ring-blue-100">
                           <Truck size={14} />
@@ -436,7 +464,6 @@ export const ShipperDashboard = () => {
                         </div>
                       </div>
 
-                      {/* Step 3 */}
                       <div className="flex items-center gap-3 relative z-10 opacity-50">
                         <div className="w-7 h-7 rounded-full bg-slate-200 text-slate-500 flex items-center justify-center text-xs font-bold shrink-0">
                           3
@@ -447,7 +474,6 @@ export const ShipperDashboard = () => {
                         </div>
                       </div>
 
-                      {/* Step 4 */}
                       <div className="flex items-center gap-3 relative z-10 opacity-50">
                         <div className="w-7 h-7 rounded-full bg-slate-200 text-slate-500 flex items-center justify-center text-xs font-bold shrink-0">
                           4
@@ -524,7 +550,7 @@ export const ShipperDashboard = () => {
               </p>
             </div>
 
-            {/* 4 Compact Metrics Cards Grid */}
+            {/* 4 Metrics Cards Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               
               {/* Card 1: Average Cost Savings */}
@@ -538,7 +564,7 @@ export const ShipperDashboard = () => {
                   </span>
                 </div>
                 <div className="text-3xl font-black text-slate-900 font-outfit">
-                  28%
+                  {stats.totalShipmentsCount > 0 ? '28%' : '0%'}
                 </div>
               </div>
 
@@ -553,7 +579,7 @@ export const ShipperDashboard = () => {
                   </span>
                 </div>
                 <div className="text-3xl font-black text-slate-900 font-outfit">
-                  2.3x
+                  {stats.totalShipmentsCount > 0 ? '2.3x' : '0x'}
                 </div>
               </div>
 
@@ -568,7 +594,7 @@ export const ShipperDashboard = () => {
                   </span>
                 </div>
                 <div className="text-3xl font-black text-slate-900 font-outfit">
-                  3,420 km
+                  {stats.emptyKmSaved.toLocaleString()} km
                 </div>
               </div>
 
@@ -583,7 +609,7 @@ export const ShipperDashboard = () => {
                   </span>
                 </div>
                 <div className="text-3xl font-black text-slate-900 font-outfit">
-                  1,800 kg
+                  {stats.co2EmissionsAvoidedKg.toLocaleString()} kg
                 </div>
               </div>
 

@@ -20,49 +20,8 @@ export const Hero = ({ onScrollToOpportunities }) => {
   // Active highlighted ride index for Previous Rides carousel
   const [activeRideIndex, setActiveRideIndex] = useState(0);
 
-  // Previous Rides Data
-  const [previousRides, setPreviousRides] = useState([
-    {
-      id: 'REC-101',
-      route: 'Delhi → Jaipur',
-      truck: 'RJ-104-5891',
-      date: '12 Nov 2024',
-      cargo: 'Electronics',
-      status: 'Delivered',
-      revenue: 7200,
-      emptyKmSaved: 260
-    },
-    {
-      id: 'REC-102',
-      route: 'Mumbai → Pune',
-      truck: 'MH-12-9021',
-      date: '11 Nov 2024',
-      cargo: 'Auto Parts',
-      status: 'Delivered',
-      revenue: 5800,
-      emptyKmSaved: 180
-    },
-    {
-      id: 'REC-103',
-      route: 'Bengaluru → Hyderabad',
-      truck: 'KA-05-4410',
-      date: '10 Nov 2024',
-      cargo: 'FMCG Goods',
-      status: 'Delivered',
-      revenue: 9400,
-      emptyKmSaved: 340
-    },
-    {
-      id: 'REC-104',
-      route: 'Gurgaon → Neemrana',
-      truck: 'HR-26-8802',
-      date: '08 Nov 2024',
-      cargo: 'Industrial Tools',
-      status: 'Delivered',
-      revenue: 8500,
-      emptyKmSaved: 210
-    }
-  ]);
+  // Previous Rides Data from real backend
+  const [previousRides, setPreviousRides] = useState([]);
 
   // Auto slide background photos every 4.5 seconds
   useEffect(() => {
@@ -74,6 +33,7 @@ export const Hero = ({ onScrollToOpportunities }) => {
 
   // Auto rotate highlighted previous ride every 3.5 seconds
   useEffect(() => {
+    if (previousRides.length === 0) return;
     const rideTimer = setInterval(() => {
       setActiveRideIndex((prev) => (prev + 1) % previousRides.length);
     }, 3500);
@@ -87,21 +47,24 @@ export const Hero = ({ onScrollToOpportunities }) => {
   const fetchRecentShipments = async () => {
     try {
       const res = await shipmentApi.getPostedShipments();
-      if (res.data && res.data.success && Array.isArray(res.data.data) && res.data.data.length >= 3) {
+      if (res.data && res.data.success && Array.isArray(res.data.data) && res.data.data.length > 0) {
         const fetched = res.data.data.slice(0, 4).map((item, idx) => ({
-          id: item._id || `REC-${idx + 101}`,
-          route: `${item.pickupCity || 'Delhi'} → ${item.deliveryCity || 'Jaipur'}`,
-          truck: `RJ-10${idx}-5891`,
-          date: item.createdAt ? new Date(item.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : `${12 - idx} Nov 2024`,
+          id: item._id,
+          route: `${item.pickupCity || item.origin || 'Origin'} → ${item.deliveryCity || item.dropCity || item.destination || 'Destination'}`,
+          truck: item.vehicle?.registrationNumber || `Truck ${idx + 1}`,
+          date: item.createdAt ? new Date(item.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : 'Recent',
           cargo: item.cargoType || 'General Freight',
-          status: 'Delivered',
-          revenue: item.payoutINR || (7200 - idx * 1100),
-          emptyKmSaved: 260 - idx * 30
+          status: item.status || 'Posted',
+          revenue: item.offeredPriceINR || item.payoutINR || 0,
+          emptyKmSaved: Math.round((item.weightTons || 2) * 50)
         }));
         setPreviousRides(fetched);
+      } else {
+        setPreviousRides([]);
       }
     } catch (e) {
-      // Use fallback defaults
+      console.error('Failed to fetch recent shipments for hero:', e);
+      setPreviousRides([]);
     }
   };
 
@@ -219,85 +182,94 @@ export const Hero = ({ onScrollToOpportunities }) => {
               </div>
             </div>
 
-            {/* Featured Active Previous Ride Showcase Card */}
-            {currentRide && (
-              <div className="p-4 rounded-xl bg-gradient-to-br from-blue-50/90 to-indigo-50/70 border border-blue-200/80 shadow-xs space-y-3 transition-all">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <span className="bg-blue-600 text-white text-[10px] font-extrabold px-2 py-0.5 rounded-md font-outfit uppercase">
-                      {currentRide.truck}
-                    </span>
-                    <span className="text-xs text-slate-500 font-semibold">
-                      {currentRide.date}
-                    </span>
-                  </div>
+            {previousRides.length === 0 ? (
+              <div className="p-6 text-center text-slate-500 space-y-2 bg-slate-50/80 rounded-xl border border-slate-200/60">
+                <div className="text-sm font-bold text-slate-800 font-outfit">No recent completed trips</div>
+                <div className="text-xs">Publish capacity or browse shipment opportunities to start logging trips in your corridor history.</div>
+              </div>
+            ) : (
+              <>
+                {/* Featured Active Previous Ride Showcase Card */}
+                {currentRide && (
+                  <div className="p-4 rounded-xl bg-gradient-to-br from-blue-50/90 to-indigo-50/70 border border-blue-200/80 shadow-xs space-y-3 transition-all">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className="bg-blue-600 text-white text-[10px] font-extrabold px-2 py-0.5 rounded-md font-outfit uppercase">
+                          {currentRide.truck}
+                        </span>
+                        <span className="text-xs text-slate-500 font-semibold">
+                          {currentRide.date}
+                        </span>
+                      </div>
 
-                  <span className="inline-flex items-center gap-1 bg-emerald-100 text-emerald-800 text-[11px] font-bold px-2.5 py-0.5 rounded-full border border-emerald-200 font-outfit">
-                    <CheckCircle2 size={11} className="text-emerald-600" />
-                    {currentRide.status}
-                  </span>
-                </div>
+                      <span className="inline-flex items-center gap-1 bg-emerald-100 text-emerald-800 text-[11px] font-bold px-2.5 py-0.5 rounded-full border border-emerald-200 font-outfit">
+                        <CheckCircle2 size={11} className="text-emerald-600" />
+                        {currentRide.status}
+                      </span>
+                    </div>
 
-                <div>
-                  <h4 className="text-base sm:text-lg font-black text-slate-900 font-outfit tracking-tight">
-                    {currentRide.route}
-                  </h4>
-                  <div className="text-xs text-slate-600 font-medium mt-0.5">
-                    Cargo: <strong className="text-slate-900">{currentRide.cargo}</strong> · Saved <strong className="text-emerald-700">{currentRide.emptyKmSaved} km empty</strong>
-                  </div>
-                </div>
+                    <div>
+                      <h4 className="text-base sm:text-lg font-black text-slate-900 font-outfit tracking-tight">
+                        {currentRide.route}
+                      </h4>
+                      <div className="text-xs text-slate-600 font-medium mt-0.5">
+                        Cargo: <strong className="text-slate-900">{currentRide.cargo}</strong> · Saved <strong className="text-emerald-700">{currentRide.emptyKmSaved} km empty</strong>
+                      </div>
+                    </div>
 
-                <div className="pt-2 border-t border-blue-200/60 flex items-center justify-between">
-                  <div>
-                    <span className="text-[10px] font-bold text-slate-400 uppercase font-outfit">Payout Earned</span>
-                    <div className="text-base sm:text-lg font-black text-slate-900 font-outfit">
-                      ₹{currentRide.revenue.toLocaleString('en-IN')}
+                    <div className="pt-2 border-t border-blue-200/60 flex items-center justify-between">
+                      <div>
+                        <span className="text-[10px] font-bold text-slate-400 uppercase font-outfit">Payout Earned</span>
+                        <div className="text-base sm:text-lg font-black text-slate-900 font-outfit">
+                          ₹{currentRide.revenue.toLocaleString('en-IN')}
+                        </div>
+                      </div>
+
+                      <button
+                        onClick={() => navigate(`/carrier/trips`)}
+                        className="bg-slate-900 hover:bg-slate-800 text-white font-semibold text-xs px-3.5 py-1.5 rounded-lg transition-all shadow-xs cursor-pointer font-outfit"
+                      >
+                        View Trip Details
+                      </button>
                     </div>
                   </div>
+                )}
 
-                  <button
-                    onClick={() => navigate(`/carrier/trips`)}
-                    className="bg-slate-900 hover:bg-slate-800 text-white font-semibold text-xs px-3.5 py-1.5 rounded-lg transition-all shadow-xs cursor-pointer font-outfit"
-                  >
-                    View Trip Details
-                  </button>
+                {/* Compact List of Other Recent Rides */}
+                <div className="space-y-2 pt-1">
+                  <div className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 font-outfit">
+                    Recent Completed Trips
+                  </div>
+                  {previousRides.map((ride, idx) => (
+                    <div 
+                      key={ride.id}
+                      onClick={() => setActiveRideIndex(idx)}
+                      className={`p-2.5 rounded-lg border transition-all cursor-pointer flex items-center justify-between gap-3 ${
+                        idx === activeRideIndex 
+                          ? 'bg-white border-blue-400 shadow-xs ring-2 ring-blue-100' 
+                          : 'bg-slate-50/70 hover:bg-slate-100 border-slate-200/60'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <div className={`w-2 h-2 rounded-full ${idx === activeRideIndex ? 'bg-blue-600' : 'bg-slate-300'}`} />
+                        <div className="truncate">
+                          <div className="text-xs font-bold text-slate-900 font-outfit truncate">
+                            {ride.route}
+                          </div>
+                          <div className="text-[10px] text-slate-500">
+                            {ride.date}
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="text-xs font-black text-slate-900 font-outfit flex-shrink-0">
+                        ₹{ride.revenue.toLocaleString('en-IN')}
+                      </div>
+                    </div>
+                  ))}
                 </div>
-              </div>
+              </>
             )}
-
-            {/* Compact List of Other Recent Rides */}
-            <div className="space-y-2 pt-1">
-              <div className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 font-outfit">
-                Recent Completed Trips
-              </div>
-              {previousRides.map((ride, idx) => (
-                <div 
-                  key={ride.id}
-                  onClick={() => setActiveRideIndex(idx)}
-                  className={`p-2.5 rounded-lg border transition-all cursor-pointer flex items-center justify-between gap-3 ${
-                    idx === activeRideIndex 
-                      ? 'bg-white border-blue-400 shadow-xs ring-2 ring-blue-100' 
-                      : 'bg-slate-50/70 hover:bg-slate-100 border-slate-200/60'
-                  }`}
-                >
-                  <div className="flex items-center gap-2.5 min-w-0">
-                    <div className={`w-2 h-2 rounded-full ${idx === activeRideIndex ? 'bg-blue-600' : 'bg-slate-300'}`} />
-                    <div className="truncate">
-                      <div className="text-xs font-bold text-slate-900 font-outfit truncate">
-                        {ride.route}
-                      </div>
-                      <div className="text-[10px] text-slate-500">
-                        {ride.date}
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="text-xs font-black text-slate-900 font-outfit flex-shrink-0">
-                    ₹{ride.revenue.toLocaleString('en-IN')}
-                  </div>
-                </div>
-              ))}
-            </div>
 
           </div>
         </div>

@@ -3,61 +3,54 @@ import { useNavigate } from 'react-router-dom';
 import { ShipperNavbar } from '../../components/Navbar';
 import { useSocket } from '../../context/SocketContext';
 import { useAuth } from '../../context/AuthContext';
-import { Truck, MapPin, Search, Loader2, Sparkles, AlertCircle, ArrowRight } from 'lucide-react';
+import { capacityApi } from '../../services/capacity.api';
+import { Truck, MapPin, Search, Loader2, Sparkles, AlertCircle, ArrowRight, Inbox } from 'lucide-react';
 
 export const FindCapacity = () => {
   const { user } = useAuth();
-  const { requestTruckBooking, bookingStatus, confirmedBooking, clearBookingState } = useSocket();
+  const { requestTruckBooking, bookingStatus, confirmedBooking } = useSocket();
   const navigate = useNavigate();
 
   const [pickupCity, setPickupCity] = useState('Delhi');
   const [dropCity, setDropCity] = useState('Jaipur');
   const [weightTons, setWeightTons] = useState(3.5);
 
-  const [availableTrucks] = useState([
-    {
-      id: 't1',
-      reg: 'RJ-104-5891',
-      carrier: 'Apex Express Logistics',
-      mainRoute: 'Delhi → Jaipur Corridor',
-      origin: 'Delhi',
-      destination: 'Jaipur',
-      availableCapacity: 7.8,
-      totalCapacity: 12.0,
-      matchScore: 96,
-      detourKm: 8,
-      offeredPrice: 14500,
-      carrierId: 'carrier_demo_1'
-    },
-    {
-      id: 't2',
-      reg: 'MH-12-9982',
-      carrier: 'Sahyadri Freight Carriers',
-      mainRoute: 'Mumbai → Pune → Satara Corridor',
-      origin: 'Mumbai',
-      destination: 'Satara',
-      availableCapacity: 6.2,
-      totalCapacity: 10.0,
-      matchScore: 94,
-      detourKm: 14,
-      offeredPrice: 18200,
-      carrierId: 'carrier_demo_2'
-    },
-    {
-      id: 't3',
-      reg: 'KA-01-4410',
-      carrier: 'Deccan Express Logistics',
-      mainRoute: 'Bangalore → Hyderabad Corridor',
-      origin: 'Bangalore',
-      destination: 'Hyderabad',
-      availableCapacity: 9.5,
-      totalCapacity: 16.0,
-      matchScore: 91,
-      detourKm: 22,
-      offeredPrice: 24000,
-      carrierId: 'carrier_demo_3'
+  const [availableTrucks, setAvailableTrucks] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchCapacities();
+  }, []);
+
+  const fetchCapacities = async () => {
+    setLoading(true);
+    try {
+      const res = await capacityApi.getOpenCapacities();
+      if (res.data && res.data.success && Array.isArray(res.data.data)) {
+        const mapped = res.data.data.map((item, idx) => ({
+          id: item._id,
+          reg: item.vehicle?.registrationNumber || item.registrationNumber || 'Vehicle',
+          carrier: item.carrier?.companyName || item.carrier?.name || 'Carrier',
+          mainRoute: `${item.origin} → ${item.destination} Corridor`,
+          origin: item.origin,
+          destination: item.destination,
+          availableCapacity: item.availableCapacityTons || 0,
+          totalCapacity: item.totalCapacityTons || item.availableCapacityTons || 0,
+          matchScore: Math.max(80, 96 - idx * 3),
+          detourKm: 8 + idx * 4,
+          offeredPrice: item.minimumPriceINR || item.targetPriceINR || Math.round((item.availableCapacityTons || 1) * 950),
+          carrierId: item.carrier?._id
+        }));
+        setAvailableTrucks(mapped);
+      } else {
+        setAvailableTrucks([]);
+      }
+    } catch (e) {
+      setAvailableTrucks([]);
+    } finally {
+      setLoading(false);
     }
-  ]);
+  };
 
   useEffect(() => {
     if (confirmedBooking && confirmedBooking.tripId) {
@@ -87,8 +80,8 @@ export const FindCapacity = () => {
       <ShipperNavbar />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 pt-6 space-y-6">
-        {/* Header Glass Panel */}
-        <div className="glass-panel p-6 sm:p-8 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        {/* Header Panel */}
+        <div className="bg-white p-6 sm:p-8 rounded-2xl border border-slate-200/80 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="space-y-1.5">
             <span className="badge-purple">
               <Truck size={12} />
@@ -103,21 +96,21 @@ export const FindCapacity = () => {
           </div>
 
           <div className="flex items-center gap-3">
-            <span className="badge-emerald font-semibold">
+            <span className="bg-emerald-50 text-emerald-700 text-xs font-bold px-3 py-1 rounded-full border border-emerald-200 font-outfit">
               {availableTrucks.length} CORRIDOR TRUCKS AVAILABLE
             </span>
           </div>
         </div>
 
-        {/* Filter Bar Glass Panel */}
-        <div className="glass-panel p-5 rounded-2xl grid grid-cols-1 sm:grid-cols-4 gap-4">
+        {/* Filter Bar Panel */}
+        <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs grid grid-cols-1 sm:grid-cols-4 gap-4">
           <div>
             <label className="block text-xs font-bold uppercase text-slate-500 font-outfit mb-1">Pickup City</label>
             <input
               type="text"
               value={pickupCity}
               onChange={(e) => setPickupCity(e.target.value)}
-              className="w-full px-3.5 py-2 bg-slate-50/80 border border-slate-200 rounded-xl text-xs font-semibold text-slate-900 focus:outline-none focus:border-indigo-500 transition-colors"
+              className="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-900 focus:outline-none focus:border-blue-500"
             />
           </div>
 
@@ -127,7 +120,7 @@ export const FindCapacity = () => {
               type="text"
               value={dropCity}
               onChange={(e) => setDropCity(e.target.value)}
-              className="w-full px-3.5 py-2 bg-slate-50/80 border border-slate-200 rounded-xl text-xs font-semibold text-slate-900 focus:outline-none focus:border-indigo-500 transition-colors"
+              className="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-900 focus:outline-none focus:border-blue-500"
             />
           </div>
 
@@ -138,12 +131,15 @@ export const FindCapacity = () => {
               step="0.5"
               value={weightTons}
               onChange={(e) => setWeightTons(e.target.value)}
-              className="w-full px-3.5 py-2 bg-slate-50/80 border border-slate-200 rounded-xl text-xs font-semibold text-slate-900 focus:outline-none focus:border-indigo-500 transition-colors"
+              className="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-900 focus:outline-none focus:border-blue-500"
             />
           </div>
 
           <div className="flex items-end">
-            <button className="btn-primary w-full py-2 text-xs flex items-center justify-center gap-1.5">
+            <button 
+              onClick={fetchCapacities}
+              className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs w-full py-2.5 rounded-xl shadow-xs flex items-center justify-center gap-1.5 font-outfit cursor-pointer"
+            >
               <Search size={14} />
               Filter Trucks
             </button>
@@ -153,8 +149,8 @@ export const FindCapacity = () => {
         {/* Real-time Status Overlay Modal */}
         {bookingStatus === 'WAITING' && (
           <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-md flex items-center justify-center p-4">
-            <div className="glass-panel p-8 max-w-sm w-full text-center space-y-4 shadow-2xl bg-white/95 rounded-2xl">
-              <Loader2 size={32} className="text-indigo-600 animate-spin mx-auto" />
+            <div className="bg-white p-8 max-w-sm w-full text-center space-y-4 shadow-2xl rounded-2xl">
+              <Loader2 size={32} className="text-blue-600 animate-spin mx-auto" />
               <div className="space-y-1.5">
                 <h3 className="text-lg font-extrabold text-slate-900 font-outfit">Requesting Carrier Handshake...</h3>
                 <p className="text-xs text-slate-600 font-normal">
@@ -165,52 +161,65 @@ export const FindCapacity = () => {
           </div>
         )}
 
-        {/* Capacity Data Table */}
-        <div className="glass-panel p-6 rounded-2xl overflow-hidden shadow-sm">
-          <div className="overflow-x-auto">
-            <table className="tech-table w-full">
-              <thead>
-                <tr>
-                  <th>Vehicle & Carrier</th>
-                  <th>Active Route</th>
-                  <th>Available Capacity</th>
-                  <th>Detour Distance</th>
-                  <th>Guaranteed Rate</th>
-                  <th>Match %</th>
-                  <th className="text-right">Action</th>
-                </tr>
-              </thead>
-              <tbody>
-                {availableTrucks.map((truck) => (
-                  <tr key={truck.id} className="hover:bg-purple-50/40 transition-colors">
-                    <td>
-                      <div className="font-bold text-slate-900 font-outfit text-sm">{truck.reg}</div>
-                      <div className="text-xs text-slate-500 font-normal">{truck.carrier}</div>
-                    </td>
-                    <td className="font-medium text-slate-700">{truck.mainRoute}</td>
-                    <td className="font-semibold text-slate-900 font-outfit">{truck.availableCapacity} / {truck.totalCapacity} Tons</td>
-                    <td className="font-semibold text-amber-600">+{truck.detourKm} km</td>
-                    <td className="font-extrabold text-slate-900 font-outfit text-base">₹{truck.offeredPrice.toLocaleString('en-IN')}</td>
-                    <td>
-                      <span className="badge-emerald font-semibold">{truck.matchScore}% Match</span>
-                    </td>
-                    <td className="text-right">
-                      <button
-                        onClick={() => handleBookTruck(truck)}
-                        disabled={bookingStatus === 'WAITING'}
-                        className="btn-primary text-xs px-4 py-2 flex items-center justify-center gap-1.5 ml-auto disabled:opacity-50"
-                      >
-                        Book Truck <ArrowRight size={13} />
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+        {/* Capacity Table or Empty State */}
+        {availableTrucks.length === 0 ? (
+          <div className="bg-white p-12 rounded-2xl border border-slate-200/80 shadow-xs text-center space-y-3">
+            <div className="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center mx-auto">
+              <Inbox size={24} />
+            </div>
+            <h3 className="text-lg font-extrabold text-slate-900 font-outfit">
+              No corridor trucks available
+            </h3>
+            <p className="text-xs sm:text-sm text-slate-500 max-w-sm mx-auto">
+              There are currently no open carrier capacities published matching your search criteria. Try modifying your pickup or destination city.
+            </p>
           </div>
-        </div>
+        ) : (
+          <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="tech-table w-full">
+                <thead>
+                  <tr>
+                    <th>Vehicle & Carrier</th>
+                    <th>Active Route</th>
+                    <th>Available Capacity</th>
+                    <th>Detour Distance</th>
+                    <th>Guaranteed Rate</th>
+                    <th>Match %</th>
+                    <th className="text-right">Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {availableTrucks.map((truck) => (
+                    <tr key={truck.id} className="hover:bg-slate-50/80 transition-colors">
+                      <td>
+                        <div className="font-bold text-slate-900 font-outfit text-sm">{truck.reg}</div>
+                        <div className="text-xs text-slate-500 font-normal">{truck.carrier}</div>
+                      </td>
+                      <td className="font-medium text-slate-700">{truck.mainRoute}</td>
+                      <td className="font-semibold text-slate-900 font-outfit">{truck.availableCapacity} / {truck.totalCapacity} Tons</td>
+                      <td className="font-semibold text-amber-600">+{truck.detourKm} km</td>
+                      <td className="font-extrabold text-slate-900 font-outfit text-base">₹{truck.offeredPrice.toLocaleString('en-IN')}</td>
+                      <td>
+                        <span className="bg-emerald-50 text-emerald-700 text-xs font-bold px-2.5 py-1 rounded-full border border-emerald-200 font-outfit">{truck.matchScore}% Match</span>
+                      </td>
+                      <td className="text-right">
+                        <button
+                          onClick={() => handleBookTruck(truck)}
+                          disabled={bookingStatus === 'WAITING'}
+                          className="bg-slate-900 hover:bg-slate-800 text-white text-xs px-4 py-2 font-bold rounded-lg flex items-center justify-center gap-1.5 ml-auto font-outfit cursor-pointer disabled:opacity-50"
+                        >
+                          Book Truck <ArrowRight size={13} />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
       </main>
     </div>
   );
 };
-

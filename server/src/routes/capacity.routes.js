@@ -1,33 +1,14 @@
 const express = require('express');
 const router = express.Router();
-const capacityService = require('../services/capacity.service');
+const capacityController = require('../controllers/capacity.controller');
 const { protect, authorize } = require('../middleware/auth.middleware');
 
-router.post('/', protect, authorize('CARRIER'), async (req, res) => {
-  try {
-    const capacity = await capacityService.publishCapacity(req.user.id, req.body);
-    res.status(201).json({ success: true, data: capacity });
-  } catch (err) {
-    res.status(400).json({ success: false, message: err.message });
-  }
-});
-
-router.get('/open', protect, async (req, res) => {
-  try {
-    const capacities = await capacityService.getOpenCapacities();
-    res.json({ success: true, data: capacities });
-  } catch (err) {
-    res.status(500).json({ success: false, message: err.message });
-  }
-});
-
-router.get('/my', protect, authorize('CARRIER'), async (req, res) => {
-  try {
-    const capacities = await capacityService.getCarrierCapacities(req.user.id);
-    res.json({ success: true, data: capacities });
-  } catch (err) {
-    res.status(500).json({ success: false, message: err.message });
-  }
-});
+router.post('/', protect, authorize('CARRIER'), capacityController.publishCapacity);
+router.get('/', capacityController.getOpenCapacities);
+router.get('/open', capacityController.getOpenCapacities);
+router.get('/my', protect, authorize('CARRIER'), capacityController.getCarrierCapacities);
+router.get('/:id', capacityController.getCapacityById);
+router.put('/:id', protect, authorize('CARRIER'), capacityController.updateCapacity);
+router.delete('/:id', protect, authorize('CARRIER'), capacityController.deleteCapacity);
 
 module.exports = router;

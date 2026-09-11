@@ -1,19 +1,51 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CarrierNavbar } from '../../components/Navbar';
-import { Package, ChevronRight, CheckCircle2, ShieldCheck, Sparkles, ArrowRight } from 'lucide-react';
+import { shipmentApi } from '../../services/shipment.api';
+import { matchApi } from '../../services/match.api';
+import { Package, ChevronRight, CheckCircle2, ShieldCheck, Sparkles, ArrowRight, Inbox } from 'lucide-react';
 
 export const FindLoads = () => {
   const navigate = useNavigate();
-  const [shipments] = useState([
-    { id: '1', title: 'Auto Parts & Industrial Bearings', pickup: 'Gurgaon', drop: 'Neemrana', weight: 2.5, price: 7200, detour: 12, matchScore: '94%' },
-    { id: '2', title: 'Precision Electrical Wiring Harness', pickup: 'Manesar', drop: 'Kotputli', weight: 1.8, price: 5400, detour: 15, matchScore: '91%' },
-    { id: '3', title: 'Textile Machinery Spare Hardware', pickup: 'Delhi', drop: 'Jaipur', weight: 3.2, price: 9100, detour: 8, matchScore: '96%' },
-    { id: '4', title: 'Consumer FMCG Cartons & Packaging', pickup: 'Shahpura', drop: 'Jaipur', weight: 2.7, price: 6800, detour: 22, matchScore: '88%' }
-  ]);
+  const [shipments, setShipments] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const handleSelectLoad = (shipment) => {
-    navigate(`/tracking/demo_trip_${Date.now()}`);
+  useEffect(() => {
+    fetchPostedShipments();
+  }, []);
+
+  const fetchPostedShipments = async () => {
+    setLoading(true);
+    try {
+      const res = await shipmentApi.getPostedShipments();
+      if (res.data && res.data.success && Array.isArray(res.data.data)) {
+        setShipments(res.data.data);
+      } else {
+        setShipments([]);
+      }
+    } catch (e) {
+      setShipments([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSelectLoad = async (shipment) => {
+    try {
+      const res = await matchApi.acceptMatch({
+        shipmentId: shipment._id,
+        grossRevenueINR: shipment.offeredPriceINR || 0,
+        detourKm: 12,
+        totalWeight: shipment.weightTons || 2.5
+      });
+      if (res.data && res.data.success && res.data.data) {
+        navigate(`/tracking/${res.data.data._id}`);
+      } else {
+        navigate('/carrier/trips');
+      }
+    } catch (e) {
+      navigate('/carrier/trips');
+    }
   };
 
   return (
@@ -21,8 +53,8 @@ export const FindLoads = () => {
       <CarrierNavbar />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 pt-6 space-y-6">
-        {/* Header Glass Panel */}
-        <div className="glass-panel p-6 sm:p-8 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        {/* Header Panel */}
+        <div className="bg-white p-6 sm:p-8 rounded-2xl border border-slate-200/80 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="space-y-1.5">
             <span className="badge-purple">
               <Sparkles size={12} />
@@ -37,54 +69,75 @@ export const FindLoads = () => {
           </div>
 
           <div className="flex items-center gap-3">
-            <span className="badge-emerald">
-              4 MATCHED FREIGHT ORDERS AVAILABLE
+            <span className="bg-emerald-50 text-emerald-700 text-xs font-bold px-3 py-1 rounded-full border border-emerald-200 font-outfit">
+              {shipments.length} MATCHED FREIGHT ORDERS AVAILABLE
             </span>
           </div>
         </div>
 
-        {/* Tech Table Glass Container */}
-        <div className="glass-panel p-6 rounded-2xl overflow-hidden shadow-sm">
-          <div className="overflow-x-auto">
-            <table className="tech-table w-full">
-              <thead>
-                <tr>
-                  <th>Freight Title</th>
-                  <th>Corridor Route</th>
-                  <th>Weight</th>
-                  <th>Detour Distance</th>
-                  <th>Offered Payout</th>
-                  <th>AI Match</th>
-                  <th className="text-right">Action</th>
-                </tr>
-              </thead>
-              <tbody>
-                {shipments.map((s) => (
-                  <tr key={s.id} className="hover:bg-purple-50/40 transition-colors">
-                    <td className="font-semibold text-slate-900 font-outfit">{s.title}</td>
-                    <td className="font-medium text-slate-700">{s.pickup} → {s.drop}</td>
-                    <td className="font-semibold text-slate-600">{s.weight} Tons</td>
-                    <td className="font-semibold text-amber-600">+{s.detour} km</td>
-                    <td className="font-extrabold text-slate-900 font-outfit text-base">₹{s.price.toLocaleString('en-IN')}</td>
-                    <td>
-                      <span className="badge-emerald font-semibold">{s.matchScore} Match</span>
-                    </td>
-                    <td className="text-right">
-                      <button
-                        onClick={() => handleSelectLoad(s)}
-                        className="btn-primary text-xs px-4 py-2 flex items-center justify-center gap-1.5 ml-auto"
-                      >
-                        Accept Load <ArrowRight size={13} />
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+        {/* Table or Empty State */}
+        {shipments.length === 0 ? (
+          <div className="bg-white p-12 rounded-2xl border border-slate-200/80 shadow-xs text-center space-y-3">
+            <div className="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center mx-auto">
+              <Inbox size={24} />
+            </div>
+            <h3 className="text-lg font-extrabold text-slate-900 font-outfit">
+              No available shipments found
+            </h3>
+            <p className="text-xs sm:text-sm text-slate-500 max-w-sm mx-auto">
+              There are currently no open shipper postings along this corridor. Check back soon or publish your capacity.
+            </p>
+            <button
+              onClick={() => navigate('/carrier/capacity')}
+              className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs px-5 py-2.5 rounded-xl transition-all shadow-xs inline-flex items-center gap-1 font-outfit cursor-pointer mt-2"
+            >
+              Publish Fleet Capacity
+            </button>
           </div>
-        </div>
+        ) : (
+          <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="tech-table w-full">
+                <thead>
+                  <tr>
+                    <th>Freight Title</th>
+                    <th>Corridor Route</th>
+                    <th>Weight</th>
+                    <th>Offered Payout</th>
+                    <th>Deadline</th>
+                    <th>Status</th>
+                    <th className="text-right">Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {shipments.map((s) => (
+                    <tr key={s._id} className="hover:bg-slate-50/80 transition-colors">
+                      <td className="font-semibold text-slate-900 font-outfit">{s.title || `${s.pickupCity || s.origin} → ${s.dropCity || s.destination}`}</td>
+                      <td className="font-medium text-slate-700">{s.pickupCity || s.origin || 'Origin'} → {s.dropCity || s.deliveryCity || s.destination || 'Destination'}</td>
+                      <td className="font-semibold text-slate-600">{s.weightTons} Tons</td>
+                      <td className="font-extrabold text-slate-900 font-outfit text-base">₹{(s.offeredPriceINR || 0).toLocaleString('en-IN')}</td>
+                      <td className="text-xs text-slate-500 font-medium">
+                        {s.deadline ? new Date(s.deadline).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }) : 'Flexible'}
+                      </td>
+                      <td>
+                        <span className="badge-emerald font-semibold">{s.status}</span>
+                      </td>
+                      <td className="text-right">
+                        <button
+                          onClick={() => handleSelectLoad(s)}
+                          className="bg-slate-900 hover:bg-slate-800 text-white text-xs px-4 py-2 rounded-lg flex items-center justify-center gap-1.5 ml-auto font-outfit cursor-pointer"
+                        >
+                          Accept Load <ArrowRight size={13} />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
       </main>
     </div>
   );
 };
-

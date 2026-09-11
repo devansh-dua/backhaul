@@ -13,6 +13,8 @@ const podRoutes = require('./routes/pod.routes');
 const ratingRoutes = require('./routes/rating.routes');
 const aiRoutes = require('./routes/ai.routes');
 
+const driverRoutes = require('./routes/driver.routes');
+
 const app = express();
 
 // Middleware
@@ -36,6 +38,7 @@ app.get('/api/health', (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/shipments', shipmentRoutes);
 app.use('/api/vehicles', vehicleRoutes);
+app.use('/api/drivers', driverRoutes);
 app.use('/api/capacity', capacityRoutes);
 app.use('/api/matches', matchRoutes);
 app.use('/api/trips', tripRoutes);

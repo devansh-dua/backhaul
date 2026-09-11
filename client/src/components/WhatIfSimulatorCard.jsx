@@ -35,7 +35,7 @@ export const WhatIfSimulatorCard = () => {
           <div>
             <div className="flex items-center gap-2">
               <span className="badge-purple">WHAT-IF ENGINE</span>
-              <span className="text-xs font-semibold text-slate-500 font-sans">Truck: RJ-104</span>
+              <span className="text-xs font-semibold text-slate-500 font-sans">Dynamic Fleet Simulator</span>
             </div>
             <h3 className="text-lg font-extrabold text-slate-900 font-outfit tracking-tight mt-0.5">
               Corridor Scenario & Economics Simulator

@@ -7,16 +7,16 @@ import { Package, ArrowRight, CheckCircle2, MapPin, Calendar, DollarSign, Sparkl
 export const PostShipment = () => {
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState({
-    title: 'Auto Parts & Bearings',
-    pickupCity: 'Delhi',
-    dropCity: 'Jaipur',
-    weightTons: 2.5,
-    volumeCbm: 8.5,
-    cargoType: 'Industrial Auto Parts',
-    offeredPriceINR: 7200,
+    title: '',
+    pickupCity: '',
+    dropCity: '',
+    weightTons: '',
+    volumeCbm: '',
+    cargoType: '',
+    offeredPriceINR: '',
     deadlineDays: 1,
-    pickupWindow: '10:30 AM - 12:00 PM',
-    deliveryDeadline: 'Today 5:00 PM'
+    pickupWindow: '',
+    deliveryDeadline: ''
   });
   const [submitting, setSubmitting] = useState(false);
 

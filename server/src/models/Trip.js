@@ -4,6 +4,7 @@ const tripSchema = new mongoose.Schema({
   carrier: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   shipper: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   vehicle: { type: mongoose.Schema.Types.ObjectId, ref: 'Vehicle', required: true },
+  driver: { type: mongoose.Schema.Types.ObjectId, ref: 'Driver' },
   shipments: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Shipment' }],
   origin: { type: String, required: true },
   destination: { type: String, required: true },

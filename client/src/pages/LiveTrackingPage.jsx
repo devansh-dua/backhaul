@@ -23,19 +23,12 @@ export const LiveTrackingPage = () => {
         const res = await tripApi.getTripById(tripId);
         if (res.data && res.data.success && res.data.data) {
           setTripDetails(res.data.data);
+          if (res.data.data.status === 'DELIVERED') {
+            setIsDelivered(true);
+          }
         }
       } catch (err) {
-        setTripDetails({
-          _id: tripId,
-          origin: 'Gurgaon',
-          destination: 'Jaipur',
-          vehicle: { registrationNumber: 'RJ-104-5891', vehicleType: 'HEAVY_TRUCK' },
-          grossRevenueINR: 14500,
-          driverPhone: '+91 98290 12345',
-          carrierName: 'Apex Express Logistics',
-          shipperName: 'Enterprise Freight Corp',
-          status: 'IN_TRANSIT'
-        });
+        console.error('Failed to fetch trip details:', err);
       }
     };
 
@@ -59,19 +52,19 @@ export const LiveTrackingPage = () => {
             </div>
 
             <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 font-outfit tracking-tight mt-1 flex items-center gap-3">
-              <span>{tripDetails?.origin || 'Gurgaon'}</span>
+              <span>{tripDetails?.origin || '—'}</span>
               <ArrowRight size={20} className="text-indigo-600" />
-              <span>{tripDetails?.destination || 'Jaipur'}</span>
+              <span>{tripDetails?.destination || '—'}</span>
             </h1>
 
             <p className="text-xs sm:text-sm text-slate-600 font-normal mt-0.5">
-              Carrier: <strong className="text-slate-900 font-outfit font-bold">{tripDetails?.carrierName || 'Apex Express Logistics'}</strong> · Rate: <strong className="text-emerald-600 font-outfit font-extrabold">₹{(tripDetails?.grossRevenueINR || 14500).toLocaleString('en-IN')}</strong>
+              Carrier: <strong className="text-slate-900 font-outfit font-bold">{tripDetails?.carrier?.companyName || tripDetails?.carrierName || 'Carrier'}</strong> · Rate: <strong className="text-emerald-600 font-outfit font-extrabold">₹{(tripDetails?.grossRevenueINR || 0).toLocaleString('en-IN')}</strong>
             </p>
           </div>
 
           <div className="flex items-center gap-3">
             <a
-              href={`tel:${tripDetails?.driverPhone || '+919829012345'}`}
+              href={`tel:${tripDetails?.driverPhone || ''}`}
               className="btn-secondary text-xs px-4 py-2.5 flex items-center gap-1.5"
             >
               <Phone size={14} /> Call Driver
@@ -98,19 +91,19 @@ export const LiveTrackingPage = () => {
             <div className="space-y-2.5 text-xs">
               <div className="flex justify-between border-b border-slate-100 pb-2">
                 <span className="text-slate-500 font-normal">Registration:</span>
-                <span className="font-bold text-slate-900 font-outfit">{tripDetails?.vehicle?.registrationNumber || 'RJ-104-5891'}</span>
+                <span className="font-bold text-slate-900 font-outfit">{tripDetails?.vehicle?.registrationNumber || 'N/A'}</span>
               </div>
               <div className="flex justify-between border-b border-slate-100 pb-2">
                 <span className="text-slate-500 font-normal">Vehicle Category:</span>
-                <span className="font-semibold text-slate-800">{tripDetails?.vehicle?.vehicleType || 'HEAVY_TRUCK'}</span>
+                <span className="font-semibold text-slate-800">{tripDetails?.vehicle?.vehicleType || 'TRUCK'}</span>
               </div>
               <div className="flex justify-between border-b border-slate-100 pb-2">
                 <span className="text-slate-500 font-normal">Driver Phone:</span>
-                <span className="font-semibold text-slate-900">{tripDetails?.driverPhone || '+91 98290 12345'}</span>
+                <span className="font-semibold text-slate-900">{tripDetails?.driverPhone || 'N/A'}</span>
               </div>
               <div className="flex justify-between pt-1">
                 <span className="text-slate-500 font-normal">Payout Rate:</span>
-                <span className="font-extrabold text-emerald-600 font-outfit text-sm">₹{(tripDetails?.grossRevenueINR || 14500).toLocaleString('en-IN')}</span>
+                <span className="font-extrabold text-emerald-600 font-outfit text-sm">₹{(tripDetails?.grossRevenueINR || 0).toLocaleString('en-IN')}</span>
               </div>
             </div>
           </div>
