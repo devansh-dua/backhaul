@@ -1,104 +1,73 @@
-const candidateGenerator = require('./candidateGenerator');
-const promptBuilder = require('./promptBuilder');
+const candidateMatcher = require('./candidateMatcher');
 const geminiService = require('./gemini.service');
-const Match = require('../../models/Match');
 
 class MatchRanker {
-  // Rank real capacity candidates for a Shipment (Shipper matching API)
-  async generateRankedCapacitiesForShipment(shipmentId) {
-    const { shipment, candidates } = await candidateGenerator.getFeasibleCapacitiesForShipment(shipmentId);
+  /**
+   * Search MongoDB capacity, apply hard constraint filters, and rank options for Shipper.
+   * @param {Object} searchParams - { pickupLocation, dropLocation, weightTons, shipmentType, pickupDate, shipmentId }
+   */
+  async findAndRankCapacities(searchParams = {}) {
+    // 1. Run hard constraint candidate matching on MongoDB records
+    const matchResult = await candidateMatcher.findFeasibleCandidates(searchParams);
 
-    if (!candidates || candidates.length === 0) {
+    const {
+      pickupLocation,
+      dropLocation,
+      weightTons,
+      shipmentType,
+      pickupDate,
+      feasibleCandidates,
+      diagnostics,
+      globalRejectionReasons
+    } = matchResult;
+
+    // 2. If ZERO feasible candidates exist, return diagnostic empty state
+    if (!feasibleCandidates || feasibleCandidates.length === 0) {
       return {
-        shipment,
+        success: true,
+        pickupLocation,
+        dropLocation,
+        weightTons,
+        shipmentType,
+        pickupDate,
         candidates: [],
-        message: 'No active compatible vehicle capacity found for this shipment'
+        message: 'No compatible vehicle capacity found',
+        diagnostics,
+        rejectionReasons: globalRejectionReasons.length > 0 ? globalRejectionReasons : [
+          'No published capacity on this route',
+          `Available capacity is below ${weightTons}T`,
+          'Vehicles are outside the pickup window',
+          'Route deviation is too high',
+          'Drivers are unavailable'
+        ]
       };
     }
 
-    // Call Gemini to rank and generate explanations for real candidates
-    const prompt = `Rank these ${candidates.length} real vehicle options for shipment ${shipment.pickupCity} -> ${shipment.dropCity} (${shipment.weightTons}T ${shipment.cargoType}). Return structured reasoning.`;
-    const aiResult = await geminiService.rankAndExplain(prompt, candidates);
-
-    // Map real candidates with ranking & explanations
-    const rankedCandidates = candidates.map((c, idx) => {
-      const matchScore = Math.max(75, 95 - idx * 5);
-      return {
-        capacityId: c.capacity?._id || c.capacity,
-        vehicleId: c.vehicle?._id || c.vehicle,
-        carrierId: c.carrier?._id || c.carrier,
-        truckReg: c.vehicle?.registrationNumber || 'Vehicle',
-        carrierName: c.carrier?.name || c.carrier?.companyName || 'Verified Carrier',
-        route: `${c.capacity.origin} → ${c.capacity.destination}`,
-        matchScore,
-        availableCapacityTons: c.capacity.availableCapacityTons,
-        detourKm: c.detourKm,
-        eta: '4:35 PM',
-        priceINR: c.economics.grossRevenueINR,
-        savingsINR: c.economics.savingsINR,
-        reasons: aiResult.reasons || [
-          `Route aligned along core ${c.capacity.origin}-${c.capacity.destination} corridor`,
-          `Capacity fits ${shipment.weightTons}T load requirements`,
-          `Verified carrier with optimal price-per-km ratio`
-        ]
-      };
-    });
+    // 3. Pass real feasible candidates to Gemini for AI ranking & explanations
+    const rankedResult = await geminiService.rankAndExplainCapacities(
+      { pickupLocation, dropLocation, weightTons, shipmentType, pickupDate },
+      feasibleCandidates
+    );
 
     return {
-      shipment,
-      candidates: rankedCandidates
+      success: true,
+      pickupLocation,
+      dropLocation,
+      weightTons,
+      shipmentType,
+      pickupDate,
+      candidates: rankedResult.candidates,
+      confidenceScore: rankedResult.confidenceScore,
+      aiSummary: rankedResult.aiSummary,
+      diagnostics,
+      totalChecked: diagnostics.totalChecked,
+      compatibleFoundCount: rankedResult.candidates.length
     };
   }
 
-  // Rank real shipment candidates for a Vehicle (Carrier matching API)
-  async getOrGenerateMatchForVehicle(vehicleId) {
-    const { vehicle, candidates } = await candidateGenerator.getFeasibleCandidatesForVehicle(vehicleId);
-
-    if (!candidates || candidates.length === 0) {
-      return {
-        vehicle,
-        matchScore: 0,
-        confidenceScore: 0,
-        recommendation: 'REJECT',
-        grossRevenueINR: 0,
-        estimatedCostINR: 0,
-        netContributionINR: 0,
-        detourKm: 0,
-        utilisationPercent: 0,
-        co2SavedKg: 0,
-        reasons: ['No compatible shipment demand found along corridor'],
-        tradeoffs: [],
-        aiSummary: 'No matching return loads fit vehicle capacity or corridor constraints.',
-        selectedShipments: []
-      };
-    }
-
-    const firstCandidate = candidates[0];
-    const econ = firstCandidate.economics;
-    const matchScore = Math.min(99, Math.round(85 + (econ.netContributionINR / 1000)));
-
-    return {
-      vehicle,
-      shipments: candidates.map(c => c.shipment._id),
-      matchScore,
-      confidenceScore: 94,
-      recommendation: 'ACCEPT',
-      grossRevenueINR: econ.grossRevenueINR,
-      estimatedCostINR: econ.estimatedCostINR,
-      netContributionINR: econ.netContributionINR,
-      detourKm: econ.detourKm,
-      utilisationPercent: econ.capacitySharePercent,
-      co2SavedKg: econ.co2SavedKg,
-      reasons: [
-        `Route aligned along core ${vehicle.currentCity}-${vehicle.destinationCity} corridor`,
-        `Fits inside available ${vehicle.availableCapacityTons}T capacity`,
-        `Safe driving hours margin verified`,
-        `Low +${econ.detourKm} km detour distance`
-      ],
-      tradeoffs: [],
-      aiSummary: `Accepting this backhaul plan turns empty return miles into ₹${econ.netContributionINR.toLocaleString('en-IN')} net contribution.`,
-      selectedShipments: candidates.map(c => c.shipment)
-    };
+  // Legacy helper method kept for backward compatibility with existing calls
+  async generateRankedCapacitiesForShipment(shipmentId) {
+    return await this.findAndRankCapacities({ shipmentId });
   }
 }
 

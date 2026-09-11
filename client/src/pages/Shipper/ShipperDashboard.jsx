@@ -46,6 +46,11 @@ export const ShipperDashboard = () => {
   const [aiSuggestedVehicles, setAiSuggestedVehicles] = useState([]);
   const [activeInTransitTrip, setActiveInTransitTrip] = useState(null);
 
+  // Search Status & Diagnostics State
+  const [searchDiagnostics, setSearchDiagnostics] = useState(null);
+  const [searchStatusStep, setSearchStatusStep] = useState(null);
+  const [sortBy, setSortBy] = useState('bestMatch');
+
   useEffect(() => {
     fetchShipperData();
   }, []);
@@ -59,57 +64,59 @@ export const ShipperDashboard = () => {
       }
 
       // 2. Fetch Real Open Capacities for AI Suggested Vehicles
-      const resCap = await capacityApi.getOpenCapacities();
-      if (resCap.data && resCap.data.success && Array.isArray(resCap.data.data)) {
-        const mapped = resCap.data.data.map((item, idx) => ({
-          id: item._id,
-          capacityId: item._id,
-          matchScore: Math.max(80, 94 - idx * 5),
-          route: `${item.origin || 'Origin'} → ${item.destination || 'Destination'}`,
-          truckReg: item.vehicle?.registrationNumber || item.registrationNumber || 'Vehicle',
-          availableCapacity: `${item.availableCapacityTons || 0}T Available`,
-          detourKm: `8 km detour`,
-          eta: `4:35 PM`,
-          carrierName: item.carrier?.companyName || item.carrier?.name || 'Verified Carrier',
-          verified: true,
-          priceINR: item.minimumPriceINR || item.targetPriceINR || Math.round((item.availableCapacityTons || 1) * 950)
-        }));
-        setAiSuggestedVehicles(mapped);
-      } else {
-        setAiSuggestedVehicles([]);
-      }
+      await executeCapacitySearch(searchForm);
     } catch (e) {
       setAiSuggestedVehicles([]);
     }
   };
 
-  const handleAiSearchSubmit = async (e) => {
-    e.preventDefault();
+  const executeCapacitySearch = async (formQuery) => {
     setLoadingAi(true);
+    setSearchStatusStep('Finding compatible capacity...');
     try {
-      // Fetch open capacities matching search form
-      const resCap = await capacityApi.getOpenCapacities();
-      if (resCap.data && resCap.data.success && Array.isArray(resCap.data.data)) {
-        const mapped = resCap.data.data.map((item, idx) => ({
-          id: item._id,
-          capacityId: item._id,
-          matchScore: Math.max(80, 94 - idx * 4),
-          route: `${searchForm.pickupLocation || item.origin} → ${searchForm.dropLocation || item.destination}`,
-          truckReg: item.vehicle?.registrationNumber || item.registrationNumber || 'Vehicle',
-          availableCapacity: `${item.availableCapacityTons || 0}T Available`,
-          detourKm: `8 km detour`,
-          eta: `4:35 PM`,
-          carrierName: item.carrier?.companyName || item.carrier?.name || 'Verified Corridor Fleet',
+      const res = await capacityApi.searchCapacities(formQuery);
+      if (res.data && res.data.success && Array.isArray(res.data.candidates)) {
+        setSearchDiagnostics(res.data.diagnostics || null);
+        const mapped = res.data.candidates.map((item) => ({
+          id: item.capacityId || item._id,
+          capacityId: item.capacityId || item._id,
+          vehicleId: item.vehicleId,
+          matchScore: item.matchScore || 85,
+          route: item.plannedRoute || `${item.pickupLocation} → ${item.dropLocation}`,
+          truckReg: item.vehicleNumber || 'Vehicle',
+          vehicleType: item.vehicleType || 'HEAVY_TRUCK',
+          availableCapacityTons: item.availableCapacity || 0,
+          availableCapacity: `${item.availableCapacity || 0}T Available`,
+          detourKmNum: item.totalDetourKm || 0,
+          detourKm: `+${item.totalDetourKm || 0} km detour`,
+          eta: item.estimatedETA || '4:35 PM',
+          carrierName: item.carrierName || 'Verified Corridor Fleet',
           verified: true,
-          priceINR: item.minimumPriceINR || item.targetPriceINR || Math.round((item.availableCapacityTons || 1) * 950)
+          priceINR: item.estimatedPrice || 7800,
+          matchReasons: item.matchReasons || ['Route aligned', 'Enough capacity', 'Driver available', 'Low detour'],
+          tradeoffs: item.tradeoffs || [],
+          aiExplanation: item.aiExplanation || ''
         }));
+
         setAiSuggestedVehicles(mapped);
+        const total = res.data.diagnostics?.totalChecked || mapped.length;
+        setSearchStatusStep(`${total} vehicles checked • ${mapped.length} compatible options found • AI ranking complete`);
+      } else {
+        setAiSuggestedVehicles([]);
+        setSearchDiagnostics(res.data?.diagnostics || null);
+        setSearchStatusStep('0 compatible options found');
       }
     } catch (err) {
-      // Keep state clean
+      setAiSuggestedVehicles([]);
+      setSearchStatusStep(null);
     } finally {
       setLoadingAi(false);
     }
+  };
+
+  const handleAiSearchSubmit = async (e) => {
+    e.preventDefault();
+    await executeCapacitySearch(searchForm);
   };
 
   const handleBookVehicle = async (vehicle) => {
@@ -119,7 +126,7 @@ export const ShipperDashboard = () => {
         vehicle: { registrationNumber: vehicle.truckReg, currentCity: searchForm.pickupLocation, destinationCity: searchForm.dropLocation },
         grossRevenueINR: vehicle.priceINR,
         netContributionINR: vehicle.priceINR * 0.85,
-        detourKm: 8,
+        detourKm: vehicle.detourKmNum || 8,
         totalWeight: parseFloat(searchForm.weightTons) || 2.5
       });
 
@@ -140,6 +147,18 @@ export const ShipperDashboard = () => {
       }, 1000);
     }
   };
+
+  // Filter & Sort Candidate Results
+  const processedVehicles = [...aiSuggestedVehicles]
+    .sort((a, b) => {
+      if (sortBy === 'bestMatch') return b.matchScore - a.matchScore;
+      if (sortBy === 'lowestPrice') return a.priceINR - b.priceINR;
+      if (sortBy === 'lowestDetour') return a.detourKmNum - b.detourKmNum;
+      if (sortBy === 'highestCapacity') return b.availableCapacityTons - a.availableCapacityTons;
+      return 0;
+    });
+
+
 
   return (
     <div className="min-h-screen bg-[#f8fafc] text-slate-900 font-sans flex flex-col justify-between selection:bg-emerald-100 selection:text-emerald-900">
@@ -277,95 +296,157 @@ export const ShipperDashboard = () => {
                     {loadingAi ? 'Ranking Capacity with Gemini...' : 'Find Best Options with AI ✦'}
                   </button>
                 </form>
+
+                {searchStatusStep && (
+                  <div className="bg-slate-50 border border-slate-200/80 p-3 rounded-xl text-xs font-semibold text-slate-600 font-outfit text-center">
+                    ⚡ {searchStatusStep}
+                  </div>
+                )}
               </div>
 
               {/* RIGHT AI SUGGESTED VEHICLES CARDS OR EMPTY STATE */}
               <div className="lg:col-span-7 space-y-4">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-base font-extrabold text-slate-900 font-outfit">
-                    AI Suggested Vehicles
-                  </h3>
-                  <span className="bg-purple-50 text-purple-700 text-xs font-bold px-2.5 py-1 rounded-full border border-purple-200 font-outfit flex items-center gap-1">
-                    <Sparkles size={13} /> ✦ Powered by Gemini
-                  </span>
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-200/60 pb-3">
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-base font-extrabold text-slate-900 font-outfit">
+                      AI Suggested Vehicles
+                    </h3>
+                    <span className="bg-purple-50 text-purple-700 text-xs font-bold px-2.5 py-0.5 rounded-full border border-purple-200 font-outfit flex items-center gap-1">
+                      <Sparkles size={13} /> ✦ Powered by Gemini
+                    </span>
+                  </div>
+
+                  {/* Filter & Sorting Controls */}
+                  <div className="flex items-center gap-2 text-xs font-bold font-outfit">
+                    <span className="text-slate-400 uppercase text-[10px]">Sort by:</span>
+                    <select
+                      value={sortBy}
+                      onChange={(e) => setSortBy(e.target.value)}
+                      className="bg-white border border-slate-200 rounded-lg px-2.5 py-1 text-xs font-bold text-slate-700 focus:outline-none"
+                    >
+                      <option value="bestMatch">Best Match</option>
+                      <option value="lowestPrice">Lowest Price</option>
+                      <option value="lowestDetour">Lowest Detour</option>
+                      <option value="highestCapacity">Highest Capacity</option>
+                    </select>
+                  </div>
                 </div>
 
-                {aiSuggestedVehicles.length === 0 ? (
-                  <div className="bg-white p-10 rounded-2xl border border-slate-200/80 text-center space-y-3">
-                    <div className="w-12 h-12 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center mx-auto">
+                {processedVehicles.length === 0 ? (
+                  <div className="bg-white p-8 sm:p-10 rounded-2xl border border-slate-200/80 shadow-xs text-center space-y-4">
+                    <div className="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center mx-auto">
                       <Inbox size={24} />
                     </div>
-                    <h4 className="text-base font-extrabold text-slate-900 font-outfit">
-                      No matching truck capacity found yet
-                    </h4>
-                    <p className="text-xs text-slate-500 max-w-sm mx-auto">
-                      There is currently no active carrier capacity published for this route. Post your shipment requirement to get notified when capacity is published.
-                    </p>
+                    <div className="space-y-1">
+                      <h4 className="text-base font-extrabold text-slate-900 font-outfit">
+                        No compatible vehicle capacity found
+                      </h4>
+                      <p className="text-xs text-slate-500 max-w-md mx-auto">
+                        No published vehicle capacity currently meets all matching requirements for <span className="font-bold text-slate-800">{searchForm.pickupLocation} → {searchForm.dropLocation} ({searchForm.weightTons}T)</span>.
+                      </p>
+                    </div>
+
+                    {searchDiagnostics && (
+                      <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 text-left max-w-md mx-auto space-y-2 text-xs">
+                        <div className="font-bold text-slate-800 uppercase text-[10px] tracking-wider font-outfit">
+                          Matching Diagnostics (Checked {searchDiagnostics.totalChecked || 0} Capacity Slots):
+                        </div>
+                        <ul className="space-y-1 text-slate-600 font-medium list-disc list-inside">
+                          {searchDiagnostics.failedRouteCount > 0 && (
+                            <li><span className="font-bold text-slate-800">{searchDiagnostics.failedRouteCount}</span> failed route compatibility / detour limits</li>
+                          )}
+                          {searchDiagnostics.failedCapacityCount > 0 && (
+                            <li><span className="font-bold text-slate-800">{searchDiagnostics.failedCapacityCount}</span> failed minimum capacity requirement (&lt; {searchForm.weightTons}T)</li>
+                          )}
+                          {searchDiagnostics.failedTimeCount > 0 && (
+                            <li><span className="font-bold text-slate-800">{searchDiagnostics.failedTimeCount}</span> failed pickup date/time window</li>
+                          )}
+                          {searchDiagnostics.failedDriverCount > 0 && (
+                            <li><span className="font-bold text-slate-800">{searchDiagnostics.failedDriverCount}</span> failed driver availability or rest status</li>
+                          )}
+                        </ul>
+                      </div>
+                    )}
+
                     <button
                       onClick={() => navigate('/shipper/post-shipment')}
-                      className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-5 py-2.5 rounded-xl transition-all shadow-xs inline-flex items-center gap-1 font-outfit cursor-pointer"
+                      className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-6 py-2.5 rounded-xl transition-all shadow-xs inline-flex items-center gap-1.5 font-outfit cursor-pointer"
                     >
-                      Post New Shipment
+                      Post Shipment & Get Notified <ArrowRight size={14} />
                     </button>
                   </div>
                 ) : (
                   <div className="space-y-4">
-                    {aiSuggestedVehicles.map((vehicle) => (
+                    {processedVehicles.map((vehicle) => (
                       <div 
                         key={vehicle.id}
-                        className="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-5 hover:border-blue-300 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-5"
+                        className="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-5 hover:border-blue-300 transition-all space-y-4"
                       >
-                        <div className="space-y-2">
-                          <div className="flex items-center gap-2">
-                            <span className="bg-emerald-50 text-emerald-700 text-xs font-bold px-2.5 py-0.5 rounded-full border border-emerald-200 font-outfit">
-                              {vehicle.matchScore}% Match
-                            </span>
-                            {vehicle.verified && (
-                              <span className="bg-blue-50 text-blue-700 text-[11px] font-bold px-2 py-0.5 rounded-full border border-blue-200 flex items-center gap-1 font-outfit">
-                                <ShieldCheck size={12} /> Verified Carrier
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                          <div className="space-y-2">
+                            <div className="flex items-center gap-2">
+                              <span className="bg-emerald-50 text-emerald-700 text-xs font-bold px-2.5 py-0.5 rounded-full border border-emerald-200 font-outfit">
+                                {vehicle.matchScore}% MATCH
                               </span>
-                            )}
-                            <TrustedPartnerBadge completedTripsTogether={vehicle.completedTripsTogether || 0} isTrustedPartner={vehicle.isTrustedPartner || false} compact={true} />
-                          </div>
+                              {vehicle.verified && (
+                                <span className="bg-blue-50 text-blue-700 text-[11px] font-bold px-2 py-0.5 rounded-full border border-blue-200 flex items-center gap-1 font-outfit">
+                                  <ShieldCheck size={12} /> Verified Carrier
+                                </span>
+                              )}
+                              <TrustedPartnerBadge completedTripsTogether={vehicle.completedTripsTogether || 0} isTrustedPartner={vehicle.isTrustedPartner || false} compact={true} />
+                            </div>
 
-                          <div className="flex items-center gap-2">
-                            <Truck size={18} className="text-blue-600 shrink-0" />
-                            <h4 className="text-lg font-black text-slate-900 font-outfit">
-                              {vehicle.route}
-                            </h4>
-                            <span className="text-xs font-semibold text-slate-500 font-outfit">
-                              ({vehicle.truckReg})
-                            </span>
-                          </div>
+                            <div className="flex items-center gap-2">
+                              <Truck size={18} className="text-blue-600 shrink-0" />
+                              <h4 className="text-lg font-black text-slate-900 font-outfit">
+                                {vehicle.truckReg}
+                              </h4>
+                              <span className="text-xs font-bold text-slate-500 font-outfit">
+                                ({vehicle.route})
+                              </span>
+                            </div>
 
-                          <div className="flex flex-wrap gap-2 text-xs font-medium text-slate-600">
-                            <span className="bg-slate-100 px-2.5 py-0.5 rounded-md font-semibold text-slate-700">
-                              {vehicle.availableCapacity}
-                            </span>
-                            <span className="bg-slate-100 px-2.5 py-0.5 rounded-md font-semibold text-slate-700">
-                              {vehicle.detourKm}
-                            </span>
-                            <span className="bg-slate-100 px-2.5 py-0.5 rounded-md font-semibold text-slate-700">
-                              ETA {vehicle.eta}
-                            </span>
-                          </div>
-                        </div>
-
-                        <div className="text-right sm:border-l sm:border-slate-100 sm:pl-6 pt-3 sm:pt-0 border-t border-slate-100 sm:border-t-0 flex sm:flex-col justify-between items-center sm:items-end gap-3 shrink-0">
-                          <div>
-                            <div className="text-[10px] font-bold text-slate-400 uppercase font-outfit">Guaranteed Rate</div>
-                            <div className="text-2xl font-black text-slate-900 font-outfit">
-                              ₹{vehicle.priceINR.toLocaleString('en-IN')}
+                            <div className="flex flex-wrap gap-2 text-xs font-medium text-slate-600">
+                              <span className="bg-slate-100 px-2.5 py-0.5 rounded-md font-semibold text-slate-700">
+                                Capacity: {vehicle.availableCapacity}
+                              </span>
+                              <span className="bg-amber-50 text-amber-700 border border-amber-200/60 px-2.5 py-0.5 rounded-md font-semibold">
+                                Detour: {vehicle.detourKm}
+                              </span>
+                              <span className="bg-slate-100 px-2.5 py-0.5 rounded-md font-semibold text-slate-700">
+                                ETA {vehicle.eta}
+                              </span>
                             </div>
                           </div>
 
-                          <button
-                            onClick={() => handleBookVehicle(vehicle)}
-                            className="bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs px-5 py-2.5 rounded-xl transition-all shadow-xs flex items-center gap-1 font-outfit cursor-pointer"
-                          >
-                            Book Now
-                          </button>
+                          <div className="text-right sm:border-l sm:border-slate-100 sm:pl-6 pt-3 sm:pt-0 border-t border-slate-100 sm:border-t-0 flex sm:flex-col justify-between items-center sm:items-end gap-3 shrink-0">
+                            <div>
+                              <div className="text-[10px] font-bold text-slate-400 uppercase font-outfit">Estimated Price</div>
+                              <div className="text-2xl font-black text-slate-900 font-outfit">
+                                ₹{vehicle.priceINR.toLocaleString('en-IN')}
+                              </div>
+                            </div>
+
+                            <button
+                              onClick={() => handleBookVehicle(vehicle)}
+                              className="bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs px-5 py-2.5 rounded-xl transition-all shadow-xs flex items-center gap-1 font-outfit cursor-pointer"
+                            >
+                              Book Now <ArrowRight size={13} />
+                            </button>
+                          </div>
                         </div>
+
+                        {/* Match Reasons Checklist */}
+                        {vehicle.matchReasons && vehicle.matchReasons.length > 0 && (
+                          <div className="pt-3 border-t border-slate-100 flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-600 font-semibold font-outfit">
+                            {vehicle.matchReasons.map((reason, idx) => (
+                              <span key={idx} className="flex items-center gap-1 text-emerald-700">
+                                <CheckCircle2 size={13} className="text-emerald-600 shrink-0" />
+                                {reason}
+                              </span>
+                            ))}
+                          </div>
+                        )}
                       </div>
                     ))}
                   </div>

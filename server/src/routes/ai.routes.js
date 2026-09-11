@@ -9,6 +9,11 @@ const Vehicle = require('../models/Vehicle');
 const Shipment = require('../models/Shipment');
 const aiController = require('../controllers/ai.controller');
 
+// BACKTRACKING Multilingual Voice AI Copilot Endpoints
+router.post('/copilot', protect, aiController.handleCopilotRequest);
+router.post('/copilot/translate', protect, aiController.translateMessage);
+router.get('/copilot/analytics', protect, aiController.getCopilotAnalytics);
+
 // AI Match Endpoint (Shipper matching real candidate capacity)
 router.post('/match', protect, aiController.matchShipment);
 
@@ -126,4 +131,3 @@ router.post('/optimize-route', protect, async (req, res) => {
 });
 
 module.exports = router;
-

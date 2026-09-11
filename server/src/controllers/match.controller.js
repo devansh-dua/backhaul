@@ -1,5 +1,24 @@
 const matchingService = require('../services/matching.service');
+const matchRanker = require('../services/ai/matchRanker');
 const Match = require('../models/Match');
+
+exports.findCapacityMatches = async (req, res) => {
+  try {
+    const searchParams = req.method === 'GET' ? req.query : req.body;
+    const result = await matchRanker.findAndRankCapacities(searchParams);
+    res.json({
+      success: true,
+      data: result.candidates,
+      candidates: result.candidates,
+      diagnostics: result.diagnostics,
+      rejectionReasons: result.rejectionReasons,
+      aiSummary: result.aiSummary,
+      confidenceScore: result.confidenceScore
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
 
 exports.acceptMatch = async (req, res) => {
   try {

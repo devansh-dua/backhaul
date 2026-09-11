@@ -8,69 +8,143 @@ class GeminiService {
     }
   }
 
-  async rankAndExplain(promptText, candidateMatches) {
-    if (!this.apiKey) {
-      console.log('⚡ Gemini API key not present, using Deterministic Fallback Engine');
-      return this.deterministicFallback(candidateMatches);
+  /**
+   * Send REAL feasible candidates to Gemini for AI ranking and explanations.
+   */
+  async rankAndExplainCapacities(shipmentQuery, candidates) {
+    if (!candidates || candidates.length === 0) {
+      return { candidates: [], aiSummary: 'No feasible candidates available.' };
     }
 
-    try {
-      const model = this.genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
-      const result = await model.generateContent(promptText);
-      const text = result.response.text();
-      
-      // Parse JSON from Gemini response
-      const jsonMatch = text.match(/\{[\s\S]*\}/);
-      if (jsonMatch) {
-        const parsed = JSON.parse(jsonMatch[0]);
-        return parsed;
-      }
-      return this.deterministicFallback(candidateMatches);
-    } catch (err) {
-      console.warn('⚠️ Gemini API call failed or rate limited:', err.message);
-      console.log('⚡ Falling back to Deterministic AI Ranking Engine');
-      return this.deterministicFallback(candidateMatches);
+    if (!this.apiKey) {
+      console.log('⚡ Gemini API key not set, using Deterministic Ranking Engine');
+      return this.deterministicCapacityRanking(candidates);
     }
+
+    const candidateSummary = candidates.map((c, idx) => ({
+      index: idx,
+      vehicleNumber: c.vehicleNumber,
+      carrierName: c.carrierName,
+      plannedRoute: c.plannedRoute,
+      availableCapacity: c.availableCapacity,
+      totalDetourKm: c.totalDetourKm,
+      estimatedPrice: c.estimatedPrice,
+      driverAvailability: c.driverAvailability,
+      deterministicScore: c.matchScore
+    }));
+
+    const promptText = `
+You are the AI Logistics Matcher for BACKTRACKING.
+A Shipper is searching for truck capacity:
+- Pickup: ${shipmentQuery.pickupLocation}
+- Drop: ${shipmentQuery.dropLocation}
+- Weight: ${shipmentQuery.weightTons} Tons
+- Shipment Type: ${shipmentQuery.shipmentType}
+- Date: ${shipmentQuery.pickupDate}
+
+Here are the ${candidates.length} REAL, pre-filtered MongoDB vehicle capacity candidates:
+${JSON.stringify(candidateSummary, null, 2)}
+
+INSTRUCTIONS:
+1. Rank these candidates from best to worst based on route alignment, detour, capacity utilization, and estimated price.
+2. Provide a 1-sentence AI explanation and bullet-point reasons for each candidate.
+3. Identify the single best option ("isBestOption": true for the top rank).
+4. Highlight trade-offs between price, detour, capacity, and timing.
+5. Provide an overall confidence score (0-100) and AI summary.
+
+IMPORTANT RULES:
+- Do NOT invent any vehicles, registration numbers, capacities, prices, or routes not present in the candidates list.
+- Only return rankings for the provided candidates list.
+
+Respond ONLY with valid JSON in this exact structure:
+{
+  "confidenceScore": 92,
+  "aiSummary": "Ranked 4 real capacity options along Delhi -> Jaipur corridor.",
+  "rankedIndices": [0, 1, 2, 3],
+  "candidateExplanations": [
+    {
+      "index": 0,
+      "aiScore": 96,
+      "isBestOption": true,
+      "explanation": "Best balance of low detour and exact capacity fit.",
+      "reasons": ["Optimal capacity fit", "Only 4 km detour", "Verified carrier"],
+      "tradeoffs": ["Slightly higher rate per ton"]
+    }
+  ]
+}
+`;
+
+    const modelNames = ['gemini-1.5-flash-latest', 'gemini-1.5-pro', 'gemini-pro'];
+    for (const modelName of modelNames) {
+      try {
+        const model = this.genAI.getGenerativeModel({ model: modelName });
+        const result = await Promise.race([
+          model.generateContent(promptText),
+          new Promise((_, reject) => setTimeout(() => reject(new Error('Gemini API timeout')), 4000))
+        ]);
+
+        const text = result.response.text();
+        const jsonMatch = text.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          const parsed = JSON.parse(jsonMatch[0]);
+          return this.mergeGeminiResults(candidates, parsed);
+        }
+      } catch (err) {
+        // Try next model or fallback
+      }
+    }
+
+    console.log('⚡ Using Deterministic AI Ranking Engine for capacity matching');
+    return this.deterministicCapacityRanking(candidates);
   }
 
-  deterministicFallback(candidateMatches) {
-    if (!candidateMatches || candidateMatches.length === 0) {
-      return {
-        recommendation: 'REJECT',
-        confidenceScore: 50,
-        topShipmentIds: [],
-        reasons: ['No compatible shipment candidates available along corridor'],
-        tradeoffs: [],
-        aiSummary: 'No matching loads fit current vehicle constraints.'
-      };
+  mergeGeminiResults(candidates, parsed) {
+    if (!parsed || !Array.isArray(parsed.candidateExplanations)) {
+      return this.deterministicCapacityRanking(candidates);
     }
 
-    // Sort by price per detour km ratio
-    const sorted = [...candidateMatches].sort((a, b) => {
-      const ratioA = a.shipment.offeredPriceINR / (a.detourKm + 1);
-      const ratioB = b.shipment.offeredPriceINR / (b.detourKm + 1);
-      return ratioB - ratioA;
+    const explanationMap = new Map();
+    parsed.candidateExplanations.forEach(exp => {
+      explanationMap.set(exp.index, exp);
     });
 
-    const topCombination = sorted.slice(0, 3);
-    const shipmentIds = topCombination.map(c => c.shipment._id.toString());
-    const totalOffered = topCombination.reduce((acc, c) => acc + c.shipment.offeredPriceINR, 0);
-    const avgDetour = Math.round(topCombination.reduce((acc, c) => acc + c.detourKm, 0) / topCombination.length);
+    const rankedCandidates = candidates.map((cand, idx) => {
+      const exp = explanationMap.get(idx);
+      if (exp) {
+        return {
+          ...cand,
+          matchScore: exp.aiScore || cand.matchScore,
+          isBestOption: !!exp.isBestOption,
+          aiExplanation: exp.explanation || cand.matchReasons[0],
+          matchReasons: exp.reasons && exp.reasons.length > 0 ? exp.reasons : cand.matchReasons,
+          tradeoffs: exp.tradeoffs || []
+        };
+      }
+      return cand;
+    });
+
+    // Sort by matchScore descending
+    rankedCandidates.sort((a, b) => b.matchScore - a.matchScore);
 
     return {
-      recommendation: totalOffered > 8000 ? 'ACCEPT' : 'REJECT',
-      confidenceScore: 94,
-      topShipmentIds: shipmentIds,
-      reasons: [
-        'Optimal revenue density per detour kilometer along Delhi-Jaipur corridor',
-        `High combined load value of ₹${totalOffered.toLocaleString('en-IN')}`,
-        `Acceptable average detour of ${avgDetour} km`,
-        'Driver safe hours validation satisfied'
-      ],
-      tradeoffs: [
-        'Requires 2 intermediate corridor stops'
-      ],
-      aiSummary: `Deterministic Decision Engine recommends accepting ${topCombination.length} compatible loads yielding ₹${totalOffered.toLocaleString('en-IN')} gross revenue.`
+      candidates: rankedCandidates,
+      confidenceScore: parsed.confidenceScore || 90,
+      aiSummary: parsed.aiSummary || `Ranked ${candidates.length} feasible capacity options.`
+    };
+  }
+
+  deterministicCapacityRanking(candidates) {
+    const rankedCandidates = candidates.map((cand, idx) => ({
+      ...cand,
+      isBestOption: idx === 0,
+      aiExplanation: cand.matchReasons[0] || 'Strong candidate matching route and capacity criteria',
+      tradeoffs: cand.totalDetourKm > 20 ? [`Requires ${cand.totalDetourKm} km detour`] : []
+    }));
+
+    return {
+      candidates: rankedCandidates,
+      confidenceScore: 88,
+      aiSummary: `Deterministic AI Engine ranked ${candidates.length} compatible MongoDB capacity options.`
     };
   }
 }

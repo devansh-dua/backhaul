@@ -48,6 +48,7 @@ export const CarrierNavbar = () => {
 
   const navLinks = [
     { label: 'Dashboard', path: '/carrier', icon: Activity },
+    { label: 'Driver Copilot', path: '/driver/copilot', icon: Cpu },
     { label: 'Find Loads', path: '/carrier/loads', icon: Package },
     { label: 'My Capacity', path: '/carrier/capacity', icon: Truck },
     { label: 'Trips', path: '/carrier/trips', icon: Compass },
