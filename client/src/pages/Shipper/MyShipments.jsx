@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { ShipperNavbar } from '../../components/Navbar';
-import { Package, Truck, Compass, CheckCircle2, ArrowRight } from 'lucide-react';
+import { Package, ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 export const MyShipments = () => {
@@ -11,58 +11,73 @@ export const MyShipments = () => {
   ]);
 
   return (
-    <div className="min-h-screen bg-white text-zinc-900 pb-16">
+    <div className="min-h-screen bg-slate-50 text-slate-900 pb-24 font-sans">
       <ShipperNavbar />
 
-      <main className="max-w-6xl mx-auto px-6 pt-8 space-y-8">
-        <div className="pb-6 border-b border-zinc-200 space-y-1">
-          <span className="text-xs font-mono tracking-widest uppercase text-zinc-400 font-semibold">
-            Shipment Management
-          </span>
-          <h1 className="text-3xl font-extrabold text-zinc-900 tracking-tight">
-            My Active & Historical Shipments
-          </h1>
-          <p className="text-xs text-zinc-500 max-w-xl">
-            Track shipment lifecycle statuses from initial posting to live transport and POD confirmation.
-          </p>
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 pt-6 space-y-6">
+        {/* Header Glass Panel */}
+        <div className="glass-panel p-6 sm:p-8 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="space-y-1.5">
+            <span className="badge-purple">
+              <Package size={12} />
+              SHIPMENT MANAGEMENT
+            </span>
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 font-outfit tracking-tight">
+              My Active & Historical Shipments
+            </h1>
+            <p className="text-xs sm:text-sm text-slate-600 font-normal max-w-2xl">
+              Track shipment lifecycle statuses from initial posting to live transport and POD confirmation.
+            </p>
+          </div>
         </div>
 
-        <div className="space-y-4">
-          {shipments.map((s) => (
-            <div key={s.id} className="bg-white border border-zinc-200 rounded-2xl p-5 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 hover:border-black transition-all shadow-sm">
-              <div className="space-y-1">
-                <div className="flex items-center gap-3">
-                  <Package className="w-5 h-5 text-black" />
-                  <h3 className="font-extrabold text-base text-zinc-900">{s.title}</h3>
-                  <span className={`px-2.5 py-0.5 text-xs font-extrabold rounded-full border ${
-                    s.status === 'IN_TRANSIT' ? 'bg-zinc-900 text-white border-black' :
-                    s.status === 'DELIVERED' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
-                    'bg-zinc-100 text-zinc-800 border-zinc-200'
-                  }`}>
-                    {s.status}
-                  </span>
-                </div>
-                <p className="text-xs text-zinc-500">
-                  Corridor: <strong className="text-zinc-800">{s.pickup} → {s.drop}</strong> · Weight: <strong className="text-zinc-800">{s.weight} Tons</strong> · Assigned Vehicle: <strong className="text-zinc-900 font-mono">{s.vehicle}</strong>
-                </p>
-              </div>
-
-              <div className="flex items-center gap-4 text-right">
-                <div>
-                  <div className="text-xs text-zinc-400 uppercase font-semibold">Offered Freight</div>
-                  <div className="text-lg font-extrabold text-zinc-900">₹{s.price.toLocaleString('en-IN')}</div>
-                </div>
-                <Link
-                  to={`/tracking/demo_trip_s1`}
-                  className="px-4 py-2 bg-black text-white text-xs font-bold rounded-xl hover:bg-zinc-800 flex items-center gap-1"
-                >
-                  Track Live GPS <ArrowRight className="w-3.5 h-3.5" />
-                </Link>
-              </div>
-            </div>
-          ))}
+        {/* Tech Table Glass Container */}
+        <div className="glass-panel p-6 rounded-2xl overflow-hidden shadow-sm">
+          <div className="overflow-x-auto">
+            <table className="tech-table w-full">
+              <thead>
+                <tr>
+                  <th>Freight Title</th>
+                  <th>Corridor Route</th>
+                  <th>Weight</th>
+                  <th>Assigned Vehicle</th>
+                  <th>Offered Rate</th>
+                  <th>Status</th>
+                  <th className="text-right">Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {shipments.map((s) => (
+                  <tr key={s.id} className="hover:bg-purple-50/40 transition-colors">
+                    <td className="font-semibold text-slate-900 font-outfit">{s.title}</td>
+                    <td className="font-medium text-slate-700">{s.pickup} → {s.drop}</td>
+                    <td className="font-semibold text-slate-600">{s.weight} Tons</td>
+                    <td className="font-semibold text-slate-900 font-outfit">{s.vehicle}</td>
+                    <td className="font-extrabold text-slate-900 font-outfit text-base">₹{s.price.toLocaleString('en-IN')}</td>
+                    <td>
+                      <span className={
+                        s.status === 'IN_TRANSIT' ? 'badge-purple' :
+                        s.status === 'DELIVERED' ? 'badge-emerald' : 'badge-cyan'
+                      }>
+                        {s.status}
+                      </span>
+                    </td>
+                    <td className="text-right">
+                      <Link
+                        to={`/tracking/demo_trip_s1`}
+                        className="btn-primary text-xs px-3.5 py-1.5 inline-flex items-center gap-1.5"
+                      >
+                        Track Live <ArrowRight size={13} />
+                      </Link>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       </main>
     </div>
   );
 };
+

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CarrierNavbar } from '../../components/Navbar';
-import { Package, MapPin, DollarSign, Filter, ArrowRight, ShieldCheck, Sparkles, CheckCircle2 } from 'lucide-react';
+import { Package, ChevronRight, CheckCircle2, ShieldCheck, Sparkles, ArrowRight } from 'lucide-react';
 
 export const FindLoads = () => {
   const navigate = useNavigate();
@@ -17,72 +17,74 @@ export const FindLoads = () => {
   };
 
   return (
-    <div className="min-h-screen bg-white text-zinc-900 pb-16">
+    <div className="min-h-screen bg-slate-50 text-slate-900 pb-20 font-sans">
       <CarrierNavbar />
 
-      <main className="max-w-6xl mx-auto px-6 pt-8 space-y-8">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-zinc-200">
-          <div className="space-y-1">
-            <span className="text-xs font-mono tracking-widest uppercase text-zinc-400 font-semibold">
-              Carrier Dispatch Marketplace
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 pt-6 space-y-6">
+        {/* Header Glass Panel */}
+        <div className="glass-panel p-6 sm:p-8 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="space-y-1.5">
+            <span className="badge-purple">
+              <Sparkles size={12} />
+              CARRIER DISPATCH MARKETPLACE
             </span>
-            <h1 className="text-3xl font-extrabold text-zinc-900 tracking-tight">
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 font-outfit tracking-tight">
               Available Return Trip Shipments
             </h1>
-            <p className="text-xs text-zinc-500 max-w-xl">
-              Compatible shipper orders along your active truck corridor rank-sorted by AI net profit margin.
+            <p className="text-xs sm:text-sm text-slate-600 font-normal max-w-2xl">
+              Compatible shipper orders along your active corridor, rank-sorted by AI net contribution margin.
             </p>
           </div>
 
-          <div className="flex items-center gap-2">
-            <span className="px-3 py-1 bg-black text-white text-xs font-bold rounded-full">
-              4 MATCHED FREIGHT ORDERS
+          <div className="flex items-center gap-3">
+            <span className="badge-emerald">
+              4 MATCHED FREIGHT ORDERS AVAILABLE
             </span>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {shipments.map((s) => (
-            <div key={s.id} className="bg-white border border-zinc-200 rounded-2xl p-6 space-y-4 hover:border-black transition-all shadow-sm flex flex-col justify-between">
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <h3 className="font-extrabold text-lg text-zinc-900">{s.title}</h3>
-                  <span className="px-2.5 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs font-bold rounded-full">
-                    {s.matchScore} MATCH
-                  </span>
-                </div>
-
-                <div className="p-4 bg-zinc-50 rounded-xl border border-zinc-100 space-y-2 text-xs">
-                  <div className="flex justify-between items-center">
-                    <span className="text-zinc-500 font-medium">Pickup → Drop City</span>
-                    <strong className="text-zinc-900 font-semibold">{s.pickup} → {s.drop}</strong>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-zinc-500 font-medium">Freight Weight</span>
-                    <strong className="text-zinc-900">{s.weight} Tons</strong>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-zinc-500 font-medium">Corridor Detour</span>
-                    <strong className="text-zinc-900">+{s.detour} km</strong>
-                  </div>
-                  <div className="flex justify-between items-center pt-2 border-t border-zinc-200">
-                    <span className="text-zinc-500 font-medium">Offered Payout</span>
-                    <strong className="text-base font-extrabold text-zinc-900">₹{s.price.toLocaleString('en-IN')}</strong>
-                  </div>
-                </div>
-              </div>
-
-              <button
-                onClick={() => handleSelectLoad(s)}
-                className="w-full py-3 bg-black text-white font-bold text-sm rounded-xl hover:bg-zinc-800 transition-all flex items-center justify-center gap-2 shadow-md"
-              >
-                <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                Accept Freight Load & Launch Ride
-              </button>
-            </div>
-          ))}
+        {/* Tech Table Glass Container */}
+        <div className="glass-panel p-6 rounded-2xl overflow-hidden shadow-sm">
+          <div className="overflow-x-auto">
+            <table className="tech-table w-full">
+              <thead>
+                <tr>
+                  <th>Freight Title</th>
+                  <th>Corridor Route</th>
+                  <th>Weight</th>
+                  <th>Detour Distance</th>
+                  <th>Offered Payout</th>
+                  <th>AI Match</th>
+                  <th className="text-right">Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {shipments.map((s) => (
+                  <tr key={s.id} className="hover:bg-purple-50/40 transition-colors">
+                    <td className="font-semibold text-slate-900 font-outfit">{s.title}</td>
+                    <td className="font-medium text-slate-700">{s.pickup} → {s.drop}</td>
+                    <td className="font-semibold text-slate-600">{s.weight} Tons</td>
+                    <td className="font-semibold text-amber-600">+{s.detour} km</td>
+                    <td className="font-extrabold text-slate-900 font-outfit text-base">₹{s.price.toLocaleString('en-IN')}</td>
+                    <td>
+                      <span className="badge-emerald font-semibold">{s.matchScore} Match</span>
+                    </td>
+                    <td className="text-right">
+                      <button
+                        onClick={() => handleSelectLoad(s)}
+                        className="btn-primary text-xs px-4 py-2 flex items-center justify-center gap-1.5 ml-auto"
+                      >
+                        Accept Load <ArrowRight size={13} />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       </main>
     </div>
   );
 };
+

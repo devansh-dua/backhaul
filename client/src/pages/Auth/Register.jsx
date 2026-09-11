@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { Truck, Package, Lock, Mail, User, Building, ArrowRight } from 'lucide-react';
+import { Truck, Package, ArrowRight, AlertCircle } from 'lucide-react';
 
 export const Register = () => {
   const [name, setName] = useState('');
@@ -34,99 +34,126 @@ export const Register = () => {
   };
 
   return (
-    <div style={{ background: '#f8fafc', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1.5rem' }}>
-      <div className="glass-panel" style={{ width: '100%', maxWidth: '480px', padding: '2.5rem', background: '#ffffff' }}>
-        <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-          <h2 style={{ fontSize: '1.75rem', fontWeight: '800', color: '#0f172a' }}>Create BACKHAULX Account</h2>
-          <p style={{ color: '#64748b', fontSize: '0.9rem', marginTop: '4px' }}>Select your role to start optimizing return trips</p>
+    <div className="min-h-screen bg-slate-50 text-slate-900 flex items-center justify-center p-4 font-sans relative overflow-hidden">
+      {/* Background Glow */}
+      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-purple-200/40 rounded-full blur-3xl pointer-events-none" />
+
+      <div className="w-full max-w-md glass-card p-8 sm:p-10 space-y-6 shadow-xl relative z-10 border border-slate-200/80">
+        <div className="text-center space-y-2">
+          <Link to="/" className="inline-flex items-center gap-2.5 mb-2 group">
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-600 flex items-center justify-center text-white shadow-md shadow-purple-500/20 group-hover:scale-105 transition-transform">
+              <Truck size={20} />
+            </div>
+            <span className="text-xl font-extrabold font-outfit tracking-tight bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent">
+              BACKHAULX
+            </span>
+          </Link>
+
+          <h2 className="text-2xl font-extrabold text-slate-900 font-outfit tracking-tight">Create Account</h2>
+          <p className="text-xs sm:text-sm text-slate-600 font-normal">Select your role to start optimizing return trip economics</p>
         </div>
 
         {/* Role Selector Tabs */}
-        <div style={{ display: 'flex', gap: '0.5rem', background: '#f1f5f9', padding: '4px', borderRadius: '10px', marginBottom: '1.5rem', border: '1px solid #e2e8f0' }}>
+        <div className="grid grid-cols-2 gap-2 bg-slate-100/80 p-1.5 rounded-xl border border-slate-200/80 text-xs font-bold font-outfit">
           <button
             type="button"
             onClick={() => setRole('CARRIER')}
-            style={{ flex: 1, padding: '0.6rem', border: 'none', borderRadius: '8px', background: role === 'CARRIER' ? '#2563eb' : 'transparent', color: role === 'CARRIER' ? '#fff' : '#475569', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
+            className={`py-2.5 rounded-lg flex items-center justify-center gap-2 transition-all cursor-pointer ${
+              role === 'CARRIER' ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-sm' : 'text-slate-600 hover:text-slate-900'
+            }`}
           >
-            <Truck size={16} /> Carrier / Fleet Owner
+            <Truck size={15} /> Carrier / Fleet
           </button>
+
           <button
             type="button"
             onClick={() => setRole('SHIPPER')}
-            style={{ flex: 1, padding: '0.6rem', border: 'none', borderRadius: '8px', background: role === 'SHIPPER' ? '#059669' : 'transparent', color: role === 'SHIPPER' ? '#fff' : '#475569', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
+            className={`py-2.5 rounded-lg flex items-center justify-center gap-2 transition-all cursor-pointer ${
+              role === 'SHIPPER' ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-sm' : 'text-slate-600 hover:text-slate-900'
+            }`}
           >
-            <Package size={16} /> Shipper / Business
+            <Package size={15} /> Shipper / Business
           </button>
         </div>
 
         {error && (
-          <div style={{ background: '#fef2f2', border: '1px solid #fecaca', color: '#dc2626', padding: '0.75rem', borderRadius: '8px', fontSize: '0.85rem', marginBottom: '1.25rem', textAlign: 'center', fontWeight: '600' }}>
-            {error}
+          <div className="p-3.5 bg-rose-50 border border-rose-200 text-rose-700 text-xs rounded-xl font-semibold flex items-center gap-2">
+            <AlertCircle size={16} className="shrink-0" />
+            <div className="flex-1">
+              <span>{error}</span>
+              {error.toLowerCase().includes('already exists') && (
+                <div className="mt-1">
+                  <Link to="/login" className="underline font-bold text-rose-800 font-outfit">Click here to Sign In instead →</Link>
+                </div>
+              )}
+            </div>
           </div>
         )}
 
-        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+        <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label style={{ display: 'block', fontSize: '0.85rem', color: '#475569', marginBottom: '4px', fontWeight: '600' }}>Full Name</label>
+            <label className="block text-xs font-bold text-slate-700 mb-1 font-outfit">Full Name</label>
             <input
               type="text"
               required
-              placeholder="e.g. Ramesh Kumar"
+              placeholder="Devansh Dua"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              style={{ width: '100%', padding: '0.7rem 1rem', background: '#f8fafc', border: '1px solid #cbd5e1', borderRadius: '8px', color: '#0f172a', fontSize: '0.9rem' }}
+              className="w-full px-4 py-2.5 bg-slate-50/80 border border-slate-200 rounded-xl text-xs font-semibold text-slate-900 focus:outline-none focus:border-indigo-500 transition-colors"
             />
           </div>
 
           <div>
-            <label style={{ display: 'block', fontSize: '0.85rem', color: '#475569', marginBottom: '4px', fontWeight: '600' }}>Email Address</label>
+            <label className="block text-xs font-bold text-slate-700 mb-1 font-outfit">Email Address</label>
             <input
               type="email"
               required
               placeholder="name@company.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              style={{ width: '100%', padding: '0.7rem 1rem', background: '#f8fafc', border: '1px solid #cbd5e1', borderRadius: '8px', color: '#0f172a', fontSize: '0.9rem' }}
+              className="w-full px-4 py-2.5 bg-slate-50/80 border border-slate-200 rounded-xl text-xs font-semibold text-slate-900 focus:outline-none focus:border-indigo-500 transition-colors"
             />
           </div>
 
           <div>
-            <label style={{ display: 'block', fontSize: '0.85rem', color: '#475569', marginBottom: '4px', fontWeight: '600' }}>Company Name</label>
+            <label className="block text-xs font-bold text-slate-700 mb-1 font-outfit">Company Name</label>
             <input
               type="text"
               required
               placeholder="Apex Logistics Ltd"
               value={company}
               onChange={(e) => setCompany(e.target.value)}
-              style={{ width: '100%', padding: '0.7rem 1rem', background: '#f8fafc', border: '1px solid #cbd5e1', borderRadius: '8px', color: '#0f172a', fontSize: '0.9rem' }}
+              className="w-full px-4 py-2.5 bg-slate-50/80 border border-slate-200 rounded-xl text-xs font-semibold text-slate-900 focus:outline-none focus:border-indigo-500 transition-colors"
             />
           </div>
 
           <div>
-            <label style={{ display: 'block', fontSize: '0.85rem', color: '#475569', marginBottom: '4px', fontWeight: '600' }}>Password</label>
+            <label className="block text-xs font-bold text-slate-700 mb-1 font-outfit">Password</label>
             <input
               type="password"
               required
               placeholder="••••••••"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              style={{ width: '100%', padding: '0.7rem 1rem', background: '#f8fafc', border: '1px solid #cbd5e1', borderRadius: '8px', color: '#0f172a', fontSize: '0.9rem' }}
+              className="w-full px-4 py-2.5 bg-slate-50/80 border border-slate-200 rounded-xl text-xs font-semibold text-slate-900 focus:outline-none focus:border-indigo-500 transition-colors"
             />
           </div>
 
           <button
             type="submit"
             disabled={loading}
-            style={{ background: role === 'CARRIER' ? 'linear-gradient(135deg, #2563eb, #1d4ed8)' : 'linear-gradient(135deg, #059669, #047857)', border: 'none', color: '#fff', padding: '0.85rem', borderRadius: '10px', fontWeight: '700', fontSize: '1rem', cursor: 'pointer', marginTop: '0.5rem' }}
+            className="btn-primary w-full py-3 text-xs flex items-center justify-center gap-2 shadow-md disabled:opacity-50"
           >
             {loading ? 'Creating Account...' : 'Create Account'}
+            <ArrowRight size={15} />
           </button>
         </form>
 
-        <div style={{ textAlign: 'center', marginTop: '1.5rem', fontSize: '0.85rem', color: '#64748b' }}>
-          Already have an account? <Link to="/login" style={{ color: '#2563eb', fontWeight: '700' }}>Sign In</Link>
+        <div className="text-center text-xs text-slate-600 font-normal pt-2">
+          Already have an account? <Link to="/login" className="text-indigo-600 font-bold hover:underline font-outfit">Sign In</Link>
         </div>
       </div>
     </div>
   );
 };
+

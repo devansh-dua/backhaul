@@ -23,27 +23,37 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const login = async (email, password) => {
-    const res = await API.post('/auth/login', { email, password });
-    if (res.data.success) {
-      const { user, token } = res.data.data;
-      localStorage.setItem('backhaulx_token', token);
-      localStorage.setItem('backhaulx_user', JSON.stringify(user));
-      setUser(user);
-      return user;
+    try {
+      const res = await API.post('/auth/login', { email, password });
+      if (res.data.success) {
+        const { user, token } = res.data.data;
+        localStorage.setItem('backhaulx_token', token);
+        localStorage.setItem('backhaulx_user', JSON.stringify(user));
+        setUser(user);
+        return user;
+      }
+      throw new Error(res.data.message || 'Login failed');
+    } catch (err) {
+      const serverMessage = err.response?.data?.message;
+      throw new Error(serverMessage || err.message || 'Login failed');
     }
-    throw new Error(res.data.message || 'Login failed');
   };
 
   const register = async (userData) => {
-    const res = await API.post('/auth/register', userData);
-    if (res.data.success) {
-      const { user, token } = res.data.data;
-      localStorage.setItem('backhaulx_token', token);
-      localStorage.setItem('backhaulx_user', JSON.stringify(user));
-      setUser(user);
-      return user;
+    try {
+      const res = await API.post('/auth/register', userData);
+      if (res.data.success) {
+        const { user, token } = res.data.data;
+        localStorage.setItem('backhaulx_token', token);
+        localStorage.setItem('backhaulx_user', JSON.stringify(user));
+        setUser(user);
+        return user;
+      }
+      throw new Error(res.data.message || 'Registration failed');
+    } catch (err) {
+      const serverMessage = err.response?.data?.message;
+      throw new Error(serverMessage || err.message || 'Registration failed');
     }
-    throw new Error(res.data.message || 'Registration failed');
   };
 
   const logout = () => {

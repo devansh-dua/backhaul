@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { CarrierNavbar } from '../../components/Navbar';
-import { Truck, Plus, Calendar, Clock, MapPin, ShieldCheck, CheckCircle2 } from 'lucide-react';
+import { Truck, Plus, ShieldCheck } from 'lucide-react';
 
 export const MyCapacity = () => {
   const [capacities] = useState([
@@ -31,87 +31,84 @@ export const MyCapacity = () => {
   const [showAddForm, setShowAddForm] = useState(false);
 
   return (
-    <div className="min-h-screen bg-white text-zinc-900 pb-16">
+    <div style={{ background: '#f8fafc', minHeight: '100vh', paddingBottom: '3rem', color: '#0f172a' }}>
       <CarrierNavbar />
 
-      <main className="max-w-6xl mx-auto px-6 pt-8 space-y-8">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-zinc-200">
-          <div className="space-y-1">
-            <span className="text-xs font-mono tracking-widest uppercase text-zinc-400 font-semibold">
-              Fleet Capacity Management
+      <main className="app-container" style={{ pt: '2rem', spaceY: '2rem' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '1.5rem', borderBottom: '1px solid #e2e8f0', marginTop: '1rem' }}>
+          <div>
+            <span className="badge badge-purple" style={{ marginBottom: '0.5rem' }}>
+              <Truck size={14} /> FLEET CAPACITY MANAGEMENT
             </span>
-            <h1 className="text-3xl font-extrabold text-zinc-900 tracking-tight">
+            <h1 style={{ fontSize: '2.2rem', fontWeight: '800', color: '#0f172a' }}>
               Published Vehicle Capacity Slots
             </h1>
-            <p className="text-xs text-zinc-500 max-w-xl">
+            <p style={{ color: '#64748b', fontSize: '0.95rem', marginTop: '4px' }}>
               Publish unused return truck capacity to receive automated AI backhaul freight proposals.
             </p>
           </div>
 
           <button
             onClick={() => setShowAddForm(!showAddForm)}
-            className="px-4 py-2.5 bg-black text-white text-xs font-bold rounded-xl hover:bg-zinc-800 transition-all flex items-center gap-2 shadow-md"
+            className="btn-primary"
           >
-            <Plus className="w-4 h-4" />
-            Publish New Capacity Slot
+            <Plus size={16} /> Publish Capacity Slot
           </button>
         </div>
 
         {showAddForm && (
-          <div className="bg-zinc-50 border border-zinc-200 rounded-2xl p-6 space-y-4 animate-in fade-in">
-            <h3 className="text-base font-bold text-zinc-900">Publish Available Return Slot</h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="glass-panel" style={{ padding: '1.75rem', marginBottom: '2rem', background: '#ffffff' }}>
+            <h3 style={{ fontSize: '1.1rem', fontWeight: '800', color: '#0f172a', marginBottom: '1rem' }}>Publish Available Return Slot</h3>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1rem', marginBottom: '1.25rem' }}>
               <div>
-                <label className="block text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-1">Truck Reg Number</label>
-                <input type="text" defaultValue="KA-01-4410" className="w-full px-3 py-2 bg-white border border-zinc-300 rounded-xl text-sm font-semibold" />
+                <label style={{ display: 'block', fontSize: '0.85rem', color: '#475569', marginBottom: '4px', fontWeight: '600' }}>Registration Number</label>
+                <input type="text" defaultValue="KA-01-4410" style={{ width: '100%', padding: '0.7rem', background: '#f8fafc', border: '1px solid #cbd5e1', borderRadius: '8px', color: '#0f172a', fontSize: '0.9rem' }} />
               </div>
               <div>
-                <label className="block text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-1">Origin → Destination</label>
-                <input type="text" defaultValue="Bangalore → Hyderabad" className="w-full px-3 py-2 bg-white border border-zinc-300 rounded-xl text-sm font-semibold" />
+                <label style={{ display: 'block', fontSize: '0.85rem', color: '#475569', marginBottom: '4px', fontWeight: '600' }}>Corridor Route</label>
+                <input type="text" defaultValue="Bangalore → Hyderabad" style={{ width: '100%', padding: '0.7rem', background: '#f8fafc', border: '1px solid #cbd5e1', borderRadius: '8px', color: '#0f172a', fontSize: '0.9rem' }} />
               </div>
               <div>
-                <label className="block text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-1">Available Capacity (Tons)</label>
-                <input type="number" defaultValue="9.5" className="w-full px-3 py-2 bg-white border border-zinc-300 rounded-xl text-sm font-semibold" />
+                <label style={{ display: 'block', fontSize: '0.85rem', color: '#475569', marginBottom: '4px', fontWeight: '600' }}>Capacity (Tons)</label>
+                <input type="number" defaultValue="9.5" style={{ width: '100%', padding: '0.7rem', background: '#f8fafc', border: '1px solid #cbd5e1', borderRadius: '8px', color: '#0f172a', fontSize: '0.9rem' }} />
               </div>
             </div>
             <button
-              onClick={() => { alert('Capacity published successfully!'); setShowAddForm(false); }}
-              className="px-5 py-2.5 bg-black text-white text-xs font-bold rounded-xl hover:bg-zinc-800"
+              onClick={() => { setShowAddForm(false); }}
+              className="btn-emerald"
             >
-              Confirm & Start Matching
+              Confirm & Start AI Matching
             </button>
           </div>
         )}
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {capacities.map((cap) => (
-            <div key={cap.id} className="bg-white border border-zinc-200 rounded-2xl p-6 space-y-4 hover:border-black transition-all shadow-sm">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Truck className="w-5 h-5 text-black" />
-                  <span className="font-extrabold text-lg text-zinc-900 font-mono">{cap.registrationNumber}</span>
-                </div>
-                <span className="px-2.5 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs font-bold rounded-full">
-                  {cap.status}
-                </span>
-              </div>
-
-              <div className="p-4 bg-zinc-50 rounded-xl border border-zinc-100 space-y-2 text-xs">
-                <div className="flex justify-between items-center">
-                  <span className="text-zinc-500 font-medium">Corridor Route</span>
-                  <strong className="text-zinc-900 font-bold">{cap.origin} → {cap.destination}</strong>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-zinc-500 font-medium">Available Freight Slot</span>
-                  <strong className="text-emerald-600 font-bold">{cap.availableCapacityTons} / {cap.totalCapacityTons} Tons</strong>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-zinc-500 font-medium">Driver Safe Hours</span>
-                  <strong className="text-zinc-900">{cap.driverHoursAvailable}</strong>
-                </div>
-              </div>
-            </div>
-          ))}
+        <div className="table-container" style={{ marginTop: '1.5rem' }}>
+          <table className="tech-table">
+            <thead>
+              <tr>
+                <th>Registration</th>
+                <th>Corridor Route</th>
+                <th>Available Capacity</th>
+                <th>Departure Time</th>
+                <th>Driver Safe Hours</th>
+                <th style={{ textAlign: 'right' }}>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {capacities.map((cap) => (
+                <tr key={cap.id}>
+                  <td style={{ fontWeight: '800', color: '#0f172a' }}>{cap.registrationNumber}</td>
+                  <td style={{ fontWeight: '600', color: '#334155' }}>{cap.origin} → {cap.destination}</td>
+                  <td style={{ fontWeight: '800', color: '#059669' }}>{cap.availableCapacityTons} / {cap.totalCapacityTons} Tons</td>
+                  <td style={{ fontSize: '0.85rem', color: '#64748b' }}>{cap.departureTime}</td>
+                  <td style={{ fontSize: '0.85rem', fontWeight: '700', color: '#0f172a' }}>{cap.driverHoursAvailable}</td>
+                  <td style={{ textAlign: 'right' }}>
+                    <span className="badge badge-emerald">{cap.status}</span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       </main>
     </div>

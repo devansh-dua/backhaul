@@ -1,96 +1,262 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ShipperNavbar } from '../../components/Navbar';
-import { StatCard } from '../../components/StatCard';
-import { Package, Truck, DollarSign, TrendingUp, Plus, ArrowRight, ShieldCheck } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { LiveTrackingMap } from '../../components/LiveTrackingMap';
+import { capacityApi } from '../../services/capacity.api';
+import { Plus, Truck, ArrowRight, CheckCircle2, ShieldCheck, Sparkles, ChevronRight, Package, TrendingUp } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
 
 export const ShipperDashboard = () => {
   const [stats] = useState({
     activeShipments: 12,
     completed: 48,
     moneySaved: 32450,
-    pending: 5
+    pendingMatches: 5
   });
 
+  const [aiMatches, setAiMatches] = useState([
+    {
+      id: 'CAP-101',
+      truckReg: 'RJ-104-5891',
+      carrierName: 'Apex Logistics',
+      matchScore: 94,
+      priceINR: 7200,
+      detourKm: 8,
+      eta: '4:35 PM',
+      reasons: [
+        'Route 100% aligned along scheduled Delhi-Jaipur highway',
+        'Capacity matches exact 2.5T payload requirements',
+        'Carrier has 4.9★ rating with 100% verified POD record'
+      ]
+    },
+    {
+      id: 'CAP-102',
+      truckReg: 'RJ-221-9920',
+      carrierName: 'SpeedExpress Freight',
+      matchScore: 89,
+      priceINR: 7650,
+      detourKm: 14,
+      eta: '5:10 PM',
+      reasons: [
+        'Passing Gurgaon checkpoint within 30 mins',
+        'Available payload capacity: 5.0 Tons'
+      ]
+    },
+    {
+      id: 'CAP-103',
+      truckReg: 'HR-882-1044',
+      carrierName: 'Haryana National Logistics',
+      matchScore: 83,
+      priceINR: 7100,
+      detourKm: 31,
+      eta: '5:45 PM',
+      reasons: [
+        'Lowest rate per ton/km ratio',
+        'Slightly higher detour detour (+31 km)'
+      ]
+    }
+  ]);
+
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    fetchAvailableCapacity();
+  }, []);
+
+  const fetchAvailableCapacity = async () => {
+    try {
+      const res = await capacityApi.getAvailableCapacity();
+      if (res.data && res.data.success && Array.isArray(res.data.data) && res.data.data.length > 0) {
+        const mapped = res.data.data.slice(0, 3).map((item, idx) => ({
+          id: item._id || `CAP-${101 + idx}`,
+          truckReg: item.vehicleId?.registrationNumber || item.registrationNumber || `RJ-10${4 + idx}`,
+          carrierName: item.carrierName || 'Verified Corridor Fleet',
+          matchScore: 94 - idx * 5,
+          priceINR: item.targetPriceINR || (7200 + idx * 450),
+          detourKm: 8 + idx * 6,
+          eta: `${4 + idx}:35 PM`,
+          reasons: [
+            'Route aligned along scheduled corridor',
+            `Available weight capacity: ${item.availableCapacityTons || 7.5} Tons`,
+            '100% Verified Carrier with verified GPS'
+          ]
+        }));
+        setAiMatches(mapped);
+      }
+    } catch (e) {
+      console.log('Using default Shipper AI Demand Analysis matches');
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-white text-zinc-900 pb-16">
+    <div className="min-h-screen bg-slate-50 text-slate-900 pb-20 font-sans">
       <ShipperNavbar />
 
-      <main className="max-w-6xl mx-auto px-6 pt-8 space-y-8">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-zinc-200">
-          <div className="space-y-1">
-            <span className="text-xs font-mono tracking-widest uppercase text-zinc-400 font-semibold">
-              Shipper Exchange & Logistics Hub
-            </span>
-            <h1 className="text-3xl font-extrabold text-zinc-900 tracking-tight">
-              Ship Smarter. Pay Less. Deliver On Time.
-            </h1>
-            <p className="text-xs text-zinc-500 max-w-xl">
-              Connect with verified empty return trucks across any interstate highway corridor.
-            </p>
-          </div>
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 pt-6 space-y-8">
+        
+        {/* 1. HERO SECTION */}
+        <section className="glass-panel p-6 sm:p-8 rounded-2xl">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+            <div className="max-w-2xl space-y-3">
+              <span className="badge-purple">
+                <Sparkles size={12} />
+                SHIPPER FREIGHT OPTIMIZATION HUB
+              </span>
+              
+              <h1 className="text-3xl sm:text-4xl font-extrabold text-slate-900 font-outfit tracking-tight leading-tight">
+                Ship Smarter. Pay Less. Deliver On Time.
+              </h1>
+              
+              <p className="text-sm sm:text-base text-slate-600 font-normal leading-relaxed">
+                Find verified vehicle capacity already moving toward your destination with AI net contribution matching.
+              </p>
 
-          <div className="flex items-center gap-3 flex-wrap">
-            <Link
-              to="/shipper/post-shipment"
-              className="px-4 py-2.5 bg-black hover:bg-zinc-800 text-white text-xs font-bold rounded-xl flex items-center gap-2 transition-all shadow-md"
-            >
-              <Plus className="w-4 h-4 text-emerald-400" />
-              Post A Shipment
-            </Link>
-            <Link
-              to="/shipper/capacity"
-              className="px-4 py-2.5 bg-white hover:bg-zinc-50 text-zinc-900 text-xs font-bold rounded-xl border border-zinc-300 flex items-center gap-2 transition-all"
-            >
-              <Truck className="w-4 h-4 text-zinc-600" />
-              Find Truck Capacity
-            </Link>
-          </div>
-        </div>
+              <div className="flex flex-wrap items-center gap-3 pt-3">
+                <Link
+                  to="/shipper/post-shipment"
+                  className="btn-primary text-xs px-5 py-2.5 flex items-center gap-2"
+                >
+                  <Plus size={15} />
+                  Post New Shipment
+                </Link>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <StatCard title="Active In-Transit Shipments" value="12" change="Live Telemetry" isPositive={true} icon={Package} />
-          <StatCard title="Completed Freight Loads" value="48" change="100% Verified POD" isPositive={true} icon={Truck} />
-          <StatCard title="Freight Cost Saved" value="₹32,450" change="32% avg savings" isPositive={true} icon={DollarSign} />
-          <StatCard title="Pending Matches" value="5" change="Corridor active" isPositive={true} icon={TrendingUp} />
-        </div>
-
-        {/* Available Return Capacity Highlights */}
-        <div className="bg-white border border-zinc-200 rounded-2xl p-6 space-y-4 shadow-sm">
-          <div className="flex items-center justify-between">
-            <h3 className="text-lg font-bold text-zinc-900">Featured Return Truck Capacity</h3>
-            <Link to="/shipper/capacity" className="text-xs font-bold text-black flex items-center gap-1 hover:underline">
-              View All Corridor Capacity <ArrowRight className="w-3.5 h-3.5" />
-            </Link>
-          </div>
-
-          <div className="bg-zinc-50 border border-zinc-200 rounded-xl p-5 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-xl bg-black flex items-center justify-center text-white font-mono font-bold text-sm">
-                RJ-104
+                <Link
+                  to="/shipper/capacity"
+                  className="btn-secondary text-xs px-4 py-2.5"
+                >
+                  Find Vehicle Capacity
+                </Link>
               </div>
-              <div className="space-y-1">
-                <div className="text-sm font-bold text-zinc-900">Delhi → Jaipur Corridor (Heavy Truck)</div>
-                <div className="text-xs text-zinc-500">
-                  Carrier: <strong className="text-zinc-800">Apex Express</strong> · 7.8 Tons Available · Departs 06:30 PM
+            </div>
+
+            {/* Quick Fleet Metrics Box */}
+            <div className="glass-card p-5 space-y-3 min-w-[280px] bg-white/90">
+              <div className="text-xs font-bold uppercase text-slate-500 font-outfit tracking-wider">
+                ACTIVE SHIPPER METRICS
+              </div>
+              <div className="space-y-2.5">
+                <div className="flex justify-between items-baseline text-xs">
+                  <span className="text-slate-600 font-normal">Active In-Transit:</span>
+                  <span className="font-extrabold text-slate-900 font-outfit">12 Loads</span>
+                </div>
+                <div className="flex justify-between items-baseline text-xs">
+                  <span className="text-slate-600 font-normal">Total Freight Saved:</span>
+                  <span className="font-extrabold text-emerald-600 font-outfit">₹32,450</span>
+                </div>
+                <div className="flex justify-between items-baseline text-xs">
+                  <span className="text-slate-600 font-normal">Average Match Score:</span>
+                  <span className="font-extrabold text-indigo-600 font-outfit">92%</span>
                 </div>
               </div>
             </div>
-
-            <div className="flex items-center gap-3">
-              <span className="px-3 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs font-bold rounded-full">
-                96% MATCH SCORE
-              </span>
-              <Link
-                to="/shipper/capacity"
-                className="px-4 py-2 bg-black text-white text-xs font-bold rounded-xl hover:bg-zinc-800"
-              >
-                Book Truck
-              </Link>
-            </div>
           </div>
-        </div>
+        </section>
+
+        {/* 2. AI DEMAND ANALYSIS OF TODAY'S SHIPMENT DEMAND */}
+        <section className="space-y-5">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="badge-purple">
+                  <Sparkles size={12} />
+                  GEMINI AI ANALYSIS
+                </span>
+                <span className="text-xs font-semibold text-slate-500 font-sans">Route: Delhi → Jaipur</span>
+              </div>
+              <h2 className="text-xl sm:text-2xl font-extrabold text-slate-900 font-outfit tracking-tight mt-1">
+                AI Match Analysis for 2.5T Electronics Payload
+              </h2>
+            </div>
+            <Link to="/shipper/capacity" className="text-xs font-bold text-indigo-600 hover:text-indigo-800 transition-colors flex items-center gap-1 font-outfit">
+              View All Compatible Fleet ({aiMatches.length}) <ChevronRight size={14} />
+            </Link>
+          </div>
+
+          {/* AI Recommended Trucks Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+            {aiMatches.map((truck, idx) => (
+              <div key={truck.id} className="glass-card p-6 space-y-4 relative flex flex-col justify-between">
+                {idx === 0 && (
+                  <div className="absolute -top-3 right-4 badge-purple shadow-sm">
+                    TOP AI RECOMMENDATION
+                  </div>
+                )}
+
+                <div className="space-y-3">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <div className="text-sm font-bold text-slate-900 font-outfit flex items-center gap-2">
+                        <Truck size={16} className="text-indigo-600" />
+                        {truck.truckReg}
+                      </div>
+                      <div className="text-xs text-slate-500 font-normal mt-0.5">{truck.carrierName}</div>
+                    </div>
+                    <span className="badge-emerald font-semibold">
+                      {truck.matchScore}% MATCH
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-2 py-3 border-y border-slate-200/80 text-center bg-slate-50/50 rounded-xl">
+                    <div>
+                      <div className="text-[10px] font-bold text-slate-400 uppercase font-outfit">Rate</div>
+                      <div className="text-xs font-extrabold text-slate-900 font-outfit mt-0.5">₹{truck.priceINR.toLocaleString('en-IN')}</div>
+                    </div>
+                    <div>
+                      <div className="text-[10px] font-bold text-slate-400 uppercase font-outfit">Detour</div>
+                      <div className="text-xs font-extrabold text-amber-600 font-outfit mt-0.5">+{truck.detourKm} km</div>
+                    </div>
+                    <div>
+                      <div className="text-[10px] font-bold text-slate-400 uppercase font-outfit">ETA</div>
+                      <div className="text-xs font-extrabold text-slate-900 font-outfit mt-0.5">{truck.eta}</div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <div className="text-[10px] font-bold uppercase text-slate-500 mb-2 font-outfit">Why Gemini Ranked This:</div>
+                    <ul className="space-y-1.5">
+                      {truck.reasons.map((r, rIdx) => (
+                        <li key={rIdx} className="text-xs font-normal text-slate-700 flex items-start gap-1.5">
+                          <CheckCircle2 size={13} className="text-emerald-600 shrink-0 mt-0.5" />
+                          <span>{r}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => navigate('/shipper/post-shipment')}
+                  className="btn-primary w-full py-2.5 text-xs flex items-center justify-center gap-1.5 mt-2"
+                >
+                  Book This Capacity <ArrowRight size={13} />
+                </button>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* 3. ACTIVE SHIPMENT LIVE TRACKING */}
+        <section className="glass-panel p-6 sm:p-8 rounded-2xl space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+              <span className="badge-purple">
+                <Truck size={12} />
+                IN-TRANSIT SHIPMENT TRACKING
+              </span>
+              <h2 className="text-xl sm:text-2xl font-extrabold text-slate-900 font-outfit tracking-tight mt-1">
+                Active Live Shipment: Delhi → Jaipur (Truck RJ-104)
+              </h2>
+            </div>
+            <span className="badge-emerald font-semibold">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+              LIVE TELEMETRY
+            </span>
+          </div>
+
+          <LiveTrackingMap tripId="demo_trip_101" />
+        </section>
+
       </main>
     </div>
   );
 };
+

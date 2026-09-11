@@ -5,7 +5,7 @@ import { LiveTrackingMap } from '../components/LiveTrackingMap';
 import { ProofOfDeliveryModal } from '../components/ProofOfDeliveryModal';
 import { useAuth } from '../context/AuthContext';
 import { tripApi } from '../services/trip.api';
-import { Truck, MapPin, Phone, ShieldCheck, ArrowRight, FileCheck, Share2, DollarSign, CheckCircle2, Clock } from 'lucide-react';
+import { Truck, Phone, ArrowRight, FileCheck, CheckCircle2, Clock } from 'lucide-react';
 
 export const LiveTrackingPage = () => {
   const { tripId } = useParams();
@@ -25,7 +25,6 @@ export const LiveTrackingPage = () => {
           setTripDetails(res.data.data);
         }
       } catch (err) {
-        // Fallback default trip object if requested tripId is a dynamic socket demo ID
         setTripDetails({
           _id: tripId,
           origin: 'Gurgaon',
@@ -44,131 +43,127 @@ export const LiveTrackingPage = () => {
   }, [tripId]);
 
   return (
-    <div className="min-h-screen bg-white text-zinc-900 pb-16">
+    <div className="min-h-screen bg-slate-50 text-slate-900 pb-20 font-sans">
       {user?.role === 'SHIPPER' ? <ShipperNavbar /> : <CarrierNavbar />}
 
-      <main className="max-w-6xl mx-auto px-6 pt-8 space-y-8">
-        {/* Header Section */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-zinc-200">
-          <div className="space-y-1">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 pt-6 space-y-6">
+        {/* Header Glass Panel */}
+        <div className="glass-panel p-6 sm:p-8 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="space-y-1.5">
             <div className="flex items-center gap-2">
-              <span className="px-2.5 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs font-bold rounded-full flex items-center gap-1.5">
+              <span className={isDelivered ? 'badge-emerald font-semibold' : 'badge-purple'}>
                 <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                {isDelivered ? 'DELIVERY COMPLETED' : 'RIDE CONFIRMED & IN TRANSIT'}
+                {isDelivered ? 'DELIVERY COMPLETED' : 'LIVE TELEMETRY IN TRANSIT'}
               </span>
-              <span className="text-xs font-mono text-zinc-400">Trip #{tripId?.slice(-8)}</span>
+              <span className="text-xs font-semibold text-slate-500 font-sans">Trip ID: {tripId?.slice(-8)}</span>
             </div>
 
-            <h1 className="text-2xl md:text-3xl font-extrabold text-zinc-900 tracking-tight flex items-center gap-3">
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 font-outfit tracking-tight mt-1 flex items-center gap-3">
               <span>{tripDetails?.origin || 'Gurgaon'}</span>
-              <ArrowRight className="w-5 h-5 text-zinc-400" />
+              <ArrowRight size={20} className="text-indigo-600" />
               <span>{tripDetails?.destination || 'Jaipur'}</span>
             </h1>
-            <p className="text-xs text-zinc-500">
-              Carrier: <strong className="text-zinc-800">{tripDetails?.carrierName || 'Apex Express Logistics'}</strong> · Freight Payout: <strong className="text-zinc-900">₹{(tripDetails?.grossRevenueINR || 14500).toLocaleString('en-IN')}</strong>
+
+            <p className="text-xs sm:text-sm text-slate-600 font-normal mt-0.5">
+              Carrier: <strong className="text-slate-900 font-outfit font-bold">{tripDetails?.carrierName || 'Apex Express Logistics'}</strong> · Rate: <strong className="text-emerald-600 font-outfit font-extrabold">₹{(tripDetails?.grossRevenueINR || 14500).toLocaleString('en-IN')}</strong>
             </p>
           </div>
 
-          <div className="flex items-center gap-3 flex-wrap">
+          <div className="flex items-center gap-3">
             <a
               href={`tel:${tripDetails?.driverPhone || '+919829012345'}`}
-              className="px-4 py-2.5 bg-zinc-100 hover:bg-zinc-200 text-zinc-800 text-xs font-bold rounded-xl border border-zinc-200 flex items-center gap-2 transition-all"
+              className="btn-secondary text-xs px-4 py-2.5 flex items-center gap-1.5"
             >
-              <Phone className="w-3.5 h-3.5 text-zinc-600" />
-              Call Driver ({tripDetails?.driverPhone || '+91 98290 12345'})
+              <Phone size={14} /> Call Driver
             </a>
 
             <button
               onClick={() => setIsPodOpen(true)}
-              className="px-4 py-2.5 bg-black hover:bg-zinc-800 text-white text-xs font-bold rounded-xl shadow-md flex items-center gap-2 transition-all"
+              className="btn-emerald text-xs px-4 py-2.5 flex items-center gap-1.5 cursor-pointer shadow-md"
             >
-              <FileCheck className="w-3.5 h-3.5 text-emerald-400" />
-              {isDelivered ? 'View Digital POD' : 'Confirm Delivery & POD'}
+              <FileCheck size={15} />
+              {isDelivered ? 'View Digital POD' : 'File POD'}
             </button>
           </div>
         </div>
 
-        {/* Live GPS Telemetry Component */}
         <LiveTrackingMap tripId={tripId} />
 
-        {/* Shipment Details & Timeline Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {/* Key Specs Card */}
-          <div className="bg-zinc-50 border border-zinc-200 rounded-2xl p-5 space-y-4">
-            <h4 className="text-sm font-bold text-zinc-900 uppercase tracking-wider">
-              Vehicle & Freight Info
-            </h4>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="glass-card p-6 space-y-4">
+            <div className="text-xs font-bold uppercase tracking-wider text-slate-500 font-outfit">
+              VEHICLE & DRIVER SPECS
+            </div>
 
-            <div className="space-y-3 text-xs">
-              <div className="flex justify-between items-center pb-2 border-b border-zinc-200">
-                <span className="text-zinc-500 font-medium">Vehicle Reg Number</span>
-                <span className="font-bold text-zinc-900 font-mono text-sm">{tripDetails?.vehicle?.registrationNumber || 'RJ-104-5891'}</span>
+            <div className="space-y-2.5 text-xs">
+              <div className="flex justify-between border-b border-slate-100 pb-2">
+                <span className="text-slate-500 font-normal">Registration:</span>
+                <span className="font-bold text-slate-900 font-outfit">{tripDetails?.vehicle?.registrationNumber || 'RJ-104-5891'}</span>
               </div>
-              <div className="flex justify-between items-center pb-2 border-b border-zinc-200">
-                <span className="text-zinc-500 font-medium">Vehicle Category</span>
-                <span className="font-semibold text-zinc-800">{tripDetails?.vehicle?.vehicleType || 'HEAVY_TRUCK'}</span>
+              <div className="flex justify-between border-b border-slate-100 pb-2">
+                <span className="text-slate-500 font-normal">Vehicle Category:</span>
+                <span className="font-semibold text-slate-800">{tripDetails?.vehicle?.vehicleType || 'HEAVY_TRUCK'}</span>
               </div>
-              <div className="flex justify-between items-center pb-2 border-b border-zinc-200">
-                <span className="text-zinc-500 font-medium">Driver Phone</span>
-                <span className="font-semibold text-zinc-900">{tripDetails?.driverPhone || '+91 98290 12345'}</span>
+              <div className="flex justify-between border-b border-slate-100 pb-2">
+                <span className="text-slate-500 font-normal">Driver Phone:</span>
+                <span className="font-semibold text-slate-900">{tripDetails?.driverPhone || '+91 98290 12345'}</span>
               </div>
-              <div className="flex justify-between items-center">
-                <span className="text-zinc-500 font-medium">Guaranteed Revenue</span>
-                <span className="font-bold text-emerald-600 text-sm">₹{(tripDetails?.grossRevenueINR || 14500).toLocaleString('en-IN')}</span>
+              <div className="flex justify-between pt-1">
+                <span className="text-slate-500 font-normal">Payout Rate:</span>
+                <span className="font-extrabold text-emerald-600 font-outfit text-sm">₹{(tripDetails?.grossRevenueINR || 14500).toLocaleString('en-IN')}</span>
               </div>
             </div>
           </div>
 
-          {/* Delivery Timeline Progress */}
-          <div className="md:col-span-2 bg-zinc-50 border border-zinc-200 rounded-2xl p-5 space-y-4">
-            <h4 className="text-sm font-bold text-zinc-900 uppercase tracking-wider">
-              Live Milestone Milestone Tracking
-            </h4>
+          <div className="lg:col-span-2 glass-card p-6 space-y-4">
+            <div className="text-xs font-bold uppercase tracking-wider text-slate-500 font-outfit">
+              DISPATCH MILESTONE TIMELINE
+            </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
-              <div className="bg-white p-3 rounded-xl border border-zinc-200 space-y-1">
-                <div className="flex items-center gap-1.5 text-emerald-600 text-xs font-bold">
-                  <CheckCircle2 className="w-3.5 h-3.5" />
-                  <span>Confirmed</span>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+              <div className="glass-panel p-3.5 space-y-1 bg-white/90">
+                <div className="flex items-center gap-1.5 text-emerald-600 font-bold font-outfit">
+                  <CheckCircle2 size={14} />
+                  <span>Matched</span>
                 </div>
-                <p className="text-[11px] text-zinc-500">Shipper & Carrier matched</p>
+                <p className="text-[11px] text-slate-500 font-normal">Contract verified</p>
               </div>
 
-              <div className="bg-white p-3 rounded-xl border border-zinc-200 space-y-1">
-                <div className="flex items-center gap-1.5 text-emerald-600 text-xs font-bold">
-                  <CheckCircle2 className="w-3.5 h-3.5" />
-                  <span>Cargo Picked</span>
+              <div className="glass-panel p-3.5 space-y-1 bg-white/90">
+                <div className="flex items-center gap-1.5 text-emerald-600 font-bold font-outfit">
+                  <CheckCircle2 size={14} />
+                  <span>Picked Up</span>
                 </div>
-                <p className="text-[11px] text-zinc-500">Loaded at {tripDetails?.origin || 'Gurgaon'}</p>
+                <p className="text-[11px] text-slate-500 font-normal">Loaded at origin</p>
               </div>
 
-              <div className="bg-white p-3 rounded-xl border border-black space-y-1 shadow-sm">
-                <div className="flex items-center gap-1.5 text-black text-xs font-extrabold">
-                  <Clock className="w-3.5 h-3.5 animate-spin" />
+              <div className="glass-panel p-3.5 space-y-1 bg-purple-50/50 border-purple-200">
+                <div className="flex items-center gap-1.5 text-indigo-600 font-bold font-outfit">
+                  <Clock size={14} className="animate-spin" />
                   <span>In Transit</span>
                 </div>
-                <p className="text-[11px] text-zinc-500">Highway speed ~62 km/h</p>
+                <p className="text-[11px] text-slate-500 font-normal">Avg ~64 km/h</p>
               </div>
 
-              <div className={`p-3 rounded-xl border space-y-1 ${isDelivered ? 'bg-white border-emerald-500' : 'bg-zinc-100 border-zinc-200 text-zinc-400'}`}>
-                <div className="flex items-center gap-1.5 text-xs font-bold">
-                  <CheckCircle2 className="w-3.5 h-3.5" />
+              <div className={`glass-panel p-3.5 space-y-1 ${isDelivered ? 'bg-emerald-50 border-emerald-300' : 'opacity-60'}`}>
+                <div className="flex items-center gap-1.5 text-slate-900 font-bold font-outfit">
+                  <CheckCircle2 size={14} className={isDelivered ? 'text-emerald-600' : ''} />
                   <span>Delivered</span>
                 </div>
-                <p className="text-[11px] text-zinc-500">POD verified</p>
+                <p className="text-[11px] text-slate-500 font-normal">POD verified</p>
               </div>
             </div>
           </div>
         </div>
-      </main>
 
-      {/* Proof of Delivery Modal */}
-      <ProofOfDeliveryModal
-        isOpen={isPodOpen}
-        onClose={() => setIsPodOpen(false)}
-        trip={tripDetails}
-        onConfirmed={() => setIsDelivered(true)}
-      />
+        <ProofOfDeliveryModal
+          isOpen={isPodOpen}
+          onClose={() => setIsPodOpen(false)}
+          trip={tripDetails}
+          onConfirmed={() => setIsDelivered(true)}
+        />
+      </main>
     </div>
   );
 };
+

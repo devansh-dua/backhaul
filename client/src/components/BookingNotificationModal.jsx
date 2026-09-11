@@ -1,10 +1,10 @@
 import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSocket } from '../context/SocketContext';
-import { CheckCircle2, XCircle, Truck, MapPin, ArrowRight, ShieldCheck, DollarSign } from 'lucide-react';
+import { CheckCircle2, XCircle, ArrowRight } from 'lucide-react';
 
 export const BookingNotificationModal = () => {
-  const { incomingRequest, respondBookingRequest, confirmedBooking, clearBookingState } = useSocket();
+  const { incomingRequest, respondBookingRequest, confirmedBooking } = useSocket();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -24,84 +24,80 @@ export const BookingNotificationModal = () => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="bg-white border border-black/10 rounded-2xl p-6 max-w-lg w-full shadow-2xl space-y-6 relative overflow-hidden">
-        {/* Top Header Badge */}
-        <div className="flex items-center justify-between border-b border-zinc-100 pb-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-md font-sans">
+      <div className="glass-panel p-6 sm:p-8 max-w-md w-full space-y-5 shadow-2xl bg-white/95 rounded-2xl relative border border-slate-200/80">
+        <div className="flex items-center justify-between border-b border-slate-200/80 pb-4">
           <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded-full bg-emerald-500 animate-ping" />
-            <span className="text-xs font-semibold uppercase tracking-wider text-zinc-900">
-              Uber-Style Real-time Return Load Booking
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+            <span className="text-xs font-bold font-outfit text-slate-900 uppercase">
+              REAL-TIME BOOKING PROPOSAL
             </span>
           </div>
-          <span className="text-xs font-mono bg-zinc-100 text-zinc-800 px-2.5 py-1 rounded-full font-medium">
-            Match Score {incomingRequest.matchScore || 94}%
+          <span className="badge-emerald font-semibold">
+            Match {incomingRequest.matchScore || 94}%
           </span>
         </div>
 
-        {/* Route Details */}
-        <div className="space-y-3">
-          <div className="flex items-center justify-between text-zinc-500 text-xs font-medium uppercase tracking-wider">
-            <span>Pickup & Drop Corridor</span>
-            <span>Est. Revenue</span>
+        <div className="space-y-2.5">
+          <div className="text-[11px] font-bold uppercase text-slate-500 tracking-wider font-outfit">
+            CORRIDOR ROUTE & PAYOUT
           </div>
 
-          <div className="flex items-center justify-between bg-zinc-50 p-4 rounded-xl border border-zinc-100">
-            <div className="space-y-1">
-              <div className="flex items-center gap-2 text-lg font-bold text-zinc-900">
+          <div className="glass-card p-4 flex items-center justify-between bg-slate-50/80">
+            <div>
+              <div className="flex items-center gap-2 text-base font-extrabold text-slate-900 font-outfit">
                 <span>{incomingRequest.pickupCity || 'Delhi'}</span>
-                <ArrowRight className="w-4 h-4 text-zinc-400" />
+                <ArrowRight size={16} className="text-indigo-600" />
                 <span>{incomingRequest.dropCity || 'Jaipur'}</span>
               </div>
-              <p className="text-xs text-zinc-500 font-sans">
-                Main Truck Route: {incomingRequest.route || 'Interstate Highway Corridor'}
+              <p className="text-xs text-slate-500 font-normal mt-0.5">
+                {incomingRequest.route || 'Interstate Corridor'}
               </p>
             </div>
             <div className="text-right">
-              <div className="text-xl font-bold text-zinc-900">
+              <div className="text-base font-extrabold text-slate-900 font-outfit">
                 ₹{(incomingRequest.offeredPriceINR || incomingRequest.price || 14500).toLocaleString('en-IN')}
               </div>
-              <span className="text-[10px] uppercase font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+              <span className="badge-emerald text-[10px]">
                 Guaranteed Payout
               </span>
             </div>
           </div>
         </div>
 
-        {/* Cargo & Detour Specs */}
-        <div className="grid grid-cols-2 gap-3">
-          <div className="p-3 bg-zinc-50 rounded-xl border border-zinc-100 space-y-1">
-            <span className="text-xs text-zinc-400 font-medium">Cargo Weight</span>
-            <p className="text-sm font-semibold text-zinc-900">
-              {incomingRequest.weightTons || 3.5} Tons Capacity
+        <div className="grid grid-cols-2 gap-3 text-xs">
+          <div className="glass-card p-3.5 bg-slate-50/50">
+            <span className="text-slate-500 font-normal">Cargo Payload</span>
+            <p className="font-extrabold text-slate-900 font-outfit text-sm mt-0.5">
+              {incomingRequest.weightTons || 3.5} Tons
             </p>
           </div>
-          <div className="p-3 bg-zinc-50 rounded-xl border border-zinc-100 space-y-1">
-            <span className="text-xs text-zinc-400 font-medium">Corridor Detour</span>
-            <p className="text-sm font-semibold text-zinc-900">
-              {incomingRequest.detourKm || 18} km (Minimal)
+          <div className="glass-card p-3.5 bg-slate-50/50">
+            <span className="text-slate-500 font-normal">Corridor Detour</span>
+            <p className="font-extrabold text-amber-600 font-outfit text-sm mt-0.5">
+              +{incomingRequest.detourKm || 18} km
             </p>
           </div>
         </div>
 
-        {/* Action Buttons */}
         <div className="grid grid-cols-2 gap-3 pt-2">
           <button
             onClick={handleReject}
-            className="w-full py-3 px-4 rounded-xl border border-zinc-300 text-zinc-700 font-medium hover:bg-zinc-100 transition-all text-sm flex items-center justify-center gap-2"
+            className="btn-secondary text-xs py-2.5 flex items-center justify-center gap-1.5"
           >
-            <XCircle className="w-4 h-4 text-zinc-500" />
+            <XCircle size={15} className="text-slate-500" />
             Decline Load
           </button>
           <button
             onClick={handleAccept}
-            className="w-full py-3 px-4 rounded-xl bg-black text-white font-medium hover:bg-zinc-800 transition-all text-sm flex items-center justify-center gap-2 shadow-lg shadow-black/10"
+            className="btn-emerald text-xs py-2.5 flex items-center justify-center gap-1.5 shadow-md"
           >
-            <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-            Accept & Start Ride
+            <CheckCircle2 size={15} />
+            Accept & Launch
           </button>
         </div>
       </div>
     </div>
   );
 };
+

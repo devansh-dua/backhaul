@@ -65,7 +65,7 @@ export const Landing = () => {
           <div className="glass-card" style={{ padding: '2rem', borderTop: '4px solid #dc2626' }}>
             <h3 style={{ fontSize: '1.25rem', color: '#dc2626', marginBottom: '1rem', fontWeight: '800' }}>Traditional Freight Model</h3>
             <div style={{ fontSize: '0.95rem', color: '#334155', display: 'flex', flexDirection: 'column', gap: '0.75rem', fontWeight: '500' }}>
-              <div>❌ Outbound load delivered $\rightarrow$ Empty 260km return trip</div>
+              <div>❌ Outbound load delivered → Empty 260km return trip</div>
               <div>❌ High uncompensated fuel expense & toll loss</div>
               <div>❌ Wasted driver safe driving hours</div>
               <div>❌ High CO2 footprint for zero economic output</div>

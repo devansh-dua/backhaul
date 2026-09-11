@@ -1,134 +1,190 @@
 import { useState } from 'react';
-import { BarChart3, RotateCcw, TrendingUp, DollarSign, Fuel, ShieldCheck } from 'lucide-react';
+import { BarChart3, RotateCcw, CheckCircle2, XCircle, ShieldCheck } from 'lucide-react';
 
 export const WhatIfSimulatorCard = () => {
   const [priceAdj, setPriceAdj] = useState(0);
   const [fuelAdj, setFuelAdj] = useState(0);
-  const [detourAdj, setDetourAdj] = useState(0);
-  const [addedWeight, setAddedWeight] = useState(0);
+  const [detourAdj, setDetourAdj] = useState(20);
+  const [addedWeight, setAddedWeight] = useState(2.5);
 
   const baseGross = 21700;
   const baseCost = 2800;
   const baseNet = 18900;
   const baseUtil = 88;
-  const baseEmptyKm = 260;
   const baseCo2 = 220;
 
-  // Recalculated AFTER values
+  // Recalculate scenario metrics
   const simulatedGross = Math.round((baseGross + (addedWeight * 3200)) * (1 + priceAdj / 100));
   const simulatedCost = Math.round((baseCost + (detourAdj * 26)) * (1 + fuelAdj / 100));
   const simulatedNet = Math.max(0, simulatedGross - simulatedCost);
   const simulatedUtil = Math.min(100, baseUtil + Math.round((addedWeight / 12) * 100));
-  const simulatedEmptyKm = baseEmptyKm + Math.round(addedWeight * 15);
-  const simulatedCo2 = Math.round(simulatedEmptyKm * 0.85);
+  const simulatedCo2 = Math.round(baseCo2 + addedWeight * 15 * 0.85);
 
   const deltaNet = simulatedNet - baseNet;
 
+  // Scenario AI Accept / Reject criteria logic
+  const isAcceptable = detourAdj <= 45 && simulatedNet > 12000 && (detourAdj <= 30 || deltaNet > 2000);
+
   return (
-    <div className="glass-panel" style={{ padding: '1.75rem' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: '#e0f2fe', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <BarChart3 size={22} color="#0284c7" />
+    <div className="glass-panel p-6 sm:p-8 rounded-2xl space-y-6 font-sans">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200/80">
+        <div className="flex items-center gap-3.5">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center text-white shrink-0 shadow-md shadow-blue-500/20">
+            <BarChart3 size={20} />
           </div>
           <div>
-            <h3 style={{ fontSize: '1.2rem', color: '#0f172a', fontWeight: '800' }}>WHAT-IF SCENARIO SIMULATOR</h3>
-            <p style={{ fontSize: '0.85rem', color: '#64748b' }}>Simulate real-time financial impact of route, fuel, load & price variations</p>
+            <div className="flex items-center gap-2">
+              <span className="badge-purple">WHAT-IF ENGINE</span>
+              <span className="text-xs font-semibold text-slate-500 font-sans">Truck: RJ-104</span>
+            </div>
+            <h3 className="text-lg font-extrabold text-slate-900 font-outfit tracking-tight mt-0.5">
+              Corridor Scenario & Economics Simulator
+            </h3>
           </div>
         </div>
 
         <button
-          onClick={() => { setPriceAdj(0); setFuelAdj(0); setDetourAdj(0); setAddedWeight(0); }}
-          style={{ background: '#f1f5f9', border: '1px solid #cbd5e1', color: '#475569', padding: '0.4rem 0.8rem', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.8rem', fontWeight: '600' }}
+          onClick={() => { setPriceAdj(0); setFuelAdj(0); setDetourAdj(20); setAddedWeight(2.5); }}
+          className="btn-secondary text-xs px-3.5 py-2 flex items-center gap-1.5 cursor-pointer shadow-xs"
         >
-          <RotateCcw size={14} /> Reset Scenario
+          <RotateCcw size={13} /> Reset Scenario
         </button>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
-        {/* Controls Section */}
-        <div className="glass-card" style={{ padding: '1.25rem' }}>
-          <h4 style={{ color: '#0f172a', fontSize: '0.95rem', marginBottom: '1rem', fontWeight: '800' }}>SIMULATION CONTROLS</h4>
-
-          <div style={{ marginBottom: '1.2rem' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', color: '#334155', marginBottom: '6px', fontWeight: '600' }}>
-              <span>Price Adjustment Rate</span>
-              <span style={{ color: '#0284c7', fontWeight: '700' }}>{priceAdj > 0 ? `+${priceAdj}%` : `${priceAdj}%`}</span>
-            </div>
-            <input type="range" min="-20" max="30" value={priceAdj} onChange={(e) => setPriceAdj(Number(e.target.value))} style={{ width: '100%', accentColor: '#2563eb' }} />
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Controls Panel */}
+        <div className="glass-card p-6 space-y-5 bg-slate-50/50">
+          <div className="text-xs font-bold uppercase tracking-wider text-slate-500 font-outfit">
+            SIMULATION PARAMETERS
           </div>
 
-          <div style={{ marginBottom: '1.2rem' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', color: '#334155', marginBottom: '6px', fontWeight: '600' }}>
-              <span>Fuel Cost Variance</span>
-              <span style={{ color: '#dc2626', fontWeight: '700' }}>{fuelAdj > 0 ? `+${fuelAdj}%` : `${fuelAdj}%`}</span>
+          <div className="space-y-2">
+            <div className="flex justify-between text-xs font-semibold text-slate-700 font-outfit">
+              <span>Detour Distance Adjustment:</span>
+              <span className="font-extrabold text-indigo-600">+{detourAdj} km</span>
             </div>
-            <input type="range" min="0" max="50" value={fuelAdj} onChange={(e) => setFuelAdj(Number(e.target.value))} style={{ width: '100%', accentColor: '#dc2626' }} />
+            <input
+              type="range"
+              min="0"
+              max="60"
+              value={detourAdj}
+              onChange={(e) => setDetourAdj(Number(e.target.value))}
+              className="w-full accent-indigo-600 cursor-pointer"
+            />
           </div>
 
-          <div style={{ marginBottom: '1.2rem' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', color: '#334155', marginBottom: '6px', fontWeight: '600' }}>
-              <span>Detour Distance Adjustment</span>
-              <span style={{ color: '#7c3aed', fontWeight: '700' }}>+{detourAdj} km</span>
+          <div className="space-y-2">
+            <div className="flex justify-between text-xs font-semibold text-slate-700 font-outfit">
+              <span>Additional Payload Weight:</span>
+              <span className="font-extrabold text-indigo-600">+{addedWeight} Tons</span>
             </div>
-            <input type="range" min="0" max="60" value={detourAdj} onChange={(e) => setDetourAdj(Number(e.target.value))} style={{ width: '100%', accentColor: '#7c3aed' }} />
+            <input
+              type="range"
+              min="0"
+              max="5"
+              step="0.5"
+              value={addedWeight}
+              onChange={(e) => setAddedWeight(Number(e.target.value))}
+              className="w-full accent-indigo-600 cursor-pointer"
+            />
           </div>
 
-          <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', color: '#334155', marginBottom: '6px', fontWeight: '600' }}>
-              <span>Add Additional Load Weight</span>
-              <span style={{ color: '#059669', fontWeight: '700' }}>+{addedWeight} Tons</span>
+          <div className="space-y-2">
+            <div className="flex justify-between text-xs font-semibold text-slate-700 font-outfit">
+              <span>Freight Rate Adjustment:</span>
+              <span className="font-extrabold text-indigo-600">{priceAdj >= 0 ? `+${priceAdj}%` : `${priceAdj}%`}</span>
             </div>
-            <input type="range" min="0" max="4" step="0.5" value={addedWeight} onChange={(e) => setAddedWeight(Number(e.target.value))} style={{ width: '100%', accentColor: '#059669' }} />
+            <input
+              type="range"
+              min="-20"
+              max="30"
+              value={priceAdj}
+              onChange={(e) => setPriceAdj(Number(e.target.value))}
+              className="w-full accent-indigo-600 cursor-pointer"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <div className="flex justify-between text-xs font-semibold text-slate-700 font-outfit">
+              <span>Fuel Cost Variance:</span>
+              <span className="font-extrabold text-indigo-600">{fuelAdj >= 0 ? `+${fuelAdj}%` : `${fuelAdj}%`}</span>
+            </div>
+            <input
+              type="range"
+              min="0"
+              max="40"
+              value={fuelAdj}
+              onChange={(e) => setFuelAdj(Number(e.target.value))}
+              className="w-full accent-indigo-600 cursor-pointer"
+            />
           </div>
         </div>
 
-        {/* Before vs After Comparison Table */}
-        <div className="glass-card" style={{ padding: '1.25rem' }}>
-          <h4 style={{ color: '#0f172a', fontSize: '0.95rem', marginBottom: '1rem', fontWeight: '800' }}>BEFORE vs AFTER SIMULATION</h4>
-
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.5rem', textAlign: 'center', fontSize: '0.8rem', paddingBottom: '0.5rem', borderBottom: '1px solid #e2e8f0', fontWeight: '700', color: '#64748b' }}>
-            <div>METRIC</div>
-            <div>BEFORE</div>
-            <div>AFTER</div>
+        {/* Before vs After Comparison & Recommendation Output */}
+        <div className="glass-card p-6 space-y-5">
+          <div className="flex justify-between items-center">
+            <div className="text-xs font-bold uppercase tracking-wider text-slate-500 font-outfit">
+              SIMULATED FINANCIAL IMPACT
+            </div>
+            <span className={isAcceptable ? 'badge-emerald' : 'badge-amber'}>
+              {isAcceptable ? <CheckCircle2 size={13} /> : <XCircle size={13} />}
+              RECOMMENDATION: {isAcceptable ? 'ACCEPT' : 'REJECT'}
+            </span>
           </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem', marginTop: '0.8rem', fontSize: '0.85rem' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', textAlign: 'center', color: '#334155' }}>
-              <div style={{ textAlign: 'left', fontWeight: '600' }}>Gross Revenue</div>
-              <div>₹{baseGross.toLocaleString('en-IN')}</div>
-              <div style={{ fontWeight: '800', color: '#0f172a' }}>₹{simulatedGross.toLocaleString('en-IN')}</div>
-            </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', textAlign: 'center', color: '#334155' }}>
-              <div style={{ textAlign: 'left', fontWeight: '600' }}>Est. Cost</div>
-              <div>₹{baseCost.toLocaleString('en-IN')}</div>
-              <div style={{ fontWeight: '800', color: '#dc2626' }}>₹{simulatedCost.toLocaleString('en-IN')}</div>
-            </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', textAlign: 'center', color: '#334155', padding: '6px 0', background: '#d1fae5', borderRadius: '6px' }}>
-              <div style={{ textAlign: 'left', fontWeight: '800', color: '#059669', paddingLeft: '6px' }}>Net Profit</div>
-              <div style={{ fontWeight: '700' }}>₹{baseNet.toLocaleString('en-IN')}</div>
-              <div style={{ fontWeight: '800', color: '#059669' }}>₹{simulatedNet.toLocaleString('en-IN')}</div>
-            </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', textAlign: 'center', color: '#334155' }}>
-              <div style={{ textAlign: 'left', fontWeight: '600' }}>Utilisation %</div>
-              <div>{baseUtil}%</div>
-              <div style={{ fontWeight: '800', color: '#0284c7' }}>{simulatedUtil}%</div>
-            </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', textAlign: 'center', color: '#334155' }}>
-              <div style={{ textAlign: 'left', fontWeight: '600' }}>CO2 Saved</div>
-              <div>{baseCo2} kg</div>
-              <div style={{ fontWeight: '800', color: '#7c3aed' }}>{simulatedCo2} kg</div>
-            </div>
+          <div className="overflow-x-auto">
+            <table className="tech-table text-xs w-full">
+              <thead>
+                <tr>
+                  <th>Metric</th>
+                  <th>Base</th>
+                  <th>Simulated</th>
+                  <th className="text-right">Variance</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr className="hover:bg-purple-50/30">
+                  <td className="font-semibold text-slate-700 font-outfit">Gross Revenue</td>
+                  <td className="text-slate-600">₹{baseGross.toLocaleString('en-IN')}</td>
+                  <td className="font-extrabold text-slate-900 font-outfit">₹{simulatedGross.toLocaleString('en-IN')}</td>
+                  <td className="text-right font-extrabold text-emerald-600 font-outfit">
+                    +₹{(simulatedGross - baseGross).toLocaleString('en-IN')}
+                  </td>
+                </tr>
+                <tr className="hover:bg-purple-50/30">
+                  <td className="font-semibold text-slate-700 font-outfit">Estimated Cost</td>
+                  <td className="text-slate-600">₹{baseCost.toLocaleString('en-IN')}</td>
+                  <td className="font-extrabold text-slate-900 font-outfit">₹{simulatedCost.toLocaleString('en-IN')}</td>
+                  <td className="text-right font-extrabold text-rose-600 font-outfit">
+                    +₹{(simulatedCost - baseCost).toLocaleString('en-IN')}
+                  </td>
+                </tr>
+                <tr className="bg-purple-50/40 font-bold">
+                  <td className="font-extrabold text-slate-900 font-outfit">Net Contribution</td>
+                  <td className="text-slate-700">₹{baseNet.toLocaleString('en-IN')}</td>
+                  <td className="text-slate-900 text-sm font-extrabold font-outfit">₹{simulatedNet.toLocaleString('en-IN')}</td>
+                  <td className={`text-right font-extrabold font-outfit ${deltaNet >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
+                    {deltaNet >= 0 ? `+₹${deltaNet.toLocaleString('en-IN')}` : `-₹${Math.abs(deltaNet).toLocaleString('en-IN')}`}
+                  </td>
+                </tr>
+                <tr className="hover:bg-purple-50/30">
+                  <td className="font-semibold text-slate-700 font-outfit">Fleet Utilisation</td>
+                  <td className="text-slate-600">{baseUtil}%</td>
+                  <td className="font-extrabold text-slate-900 font-outfit">{simulatedUtil}%</td>
+                  <td className="text-right font-extrabold text-emerald-600 font-outfit">+{simulatedUtil - baseUtil}%</td>
+                </tr>
+              </tbody>
+            </table>
           </div>
 
-          <div style={{ marginTop: '1.2rem', padding: '0.75rem', borderRadius: '8px', background: deltaNet >= 0 ? '#d1fae5' : '#fef2f2', border: `1px solid ${deltaNet >= 0 ? '#a7f3d0' : '#fecaca'}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontSize: '0.85rem', color: '#0f172a', fontWeight: '600' }}>Impact on Net Contribution:</span>
-            <span style={{ fontSize: '1.05rem', fontWeight: '800', color: deltaNet >= 0 ? '#059669' : '#dc2626' }}>
-              {deltaNet >= 0 ? `+₹${deltaNet.toLocaleString('en-IN')}` : `-₹${Math.abs(deltaNet).toLocaleString('en-IN')}`}
+          <div className={`p-4 rounded-xl border text-xs font-semibold flex items-center justify-between shadow-xs ${
+            isAcceptable ? 'bg-emerald-50/80 border-emerald-200 text-emerald-900' : 'bg-amber-50/80 border-amber-200 text-amber-900'
+          }`}>
+            <span className="font-outfit font-bold">AI Reasoning:</span>
+            <span className="font-normal text-slate-800">
+              {isAcceptable
+                ? `Net payout remains positive (+₹${simulatedNet.toLocaleString('en-IN')}) within acceptable ${detourAdj}km detour.`
+                : `Excessive detour (+${detourAdj}km) or low net return makes scenario unviable.`}
             </span>
           </div>
         </div>
@@ -136,3 +192,4 @@ export const WhatIfSimulatorCard = () => {
     </div>
   );
 };
+

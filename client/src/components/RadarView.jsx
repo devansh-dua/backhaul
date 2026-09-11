@@ -1,5 +1,4 @@
-import { useState } from 'react';
-import { Cpu, MapPin, TrendingUp, Navigation, Package } from 'lucide-react';
+import { Cpu, MapPin, CheckCircle2, Radio } from 'lucide-react';
 
 export const RadarView = () => {
   const corridorDemands = [
@@ -10,43 +9,48 @@ export const RadarView = () => {
   ];
 
   return (
-    <div className="glass-panel" style={{ padding: '1.5rem' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: '#e0f2fe', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <Cpu size={20} color="#0284c7" />
+    <div className="glass-panel p-6 sm:p-8 rounded-2xl space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200/80">
+        <div className="flex items-center gap-3.5">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center text-white shrink-0 shadow-md shadow-blue-500/20">
+            <Radio size={20} className="animate-pulse" />
           </div>
           <div>
-            <h3 style={{ fontSize: '1.15rem', color: '#0f172a', fontWeight: '800' }}>BACKHAUL RADAR DEMAND HEATMAP</h3>
-            <p style={{ fontSize: '0.8rem', color: '#64748b' }}>Surfaces real-time shipment demand clusters along active route vector</p>
+            <div className="flex items-center gap-2">
+              <span className="badge-purple">BACKHAUL RADAR</span>
+              <span className="text-xs font-semibold text-slate-500 font-sans">Live Demand Density</span>
+            </div>
+            <h3 className="text-lg font-extrabold text-slate-900 font-outfit tracking-tight mt-0.5">
+              Corridor Freight Demand Heatmap
+            </h3>
           </div>
         </div>
-        <span className="badge badge-cyan">4 ACTIVE CORRIDOR HUBS</span>
+        <span className="badge-emerald font-semibold">4 ACTIVE CORRIDOR HUBS</span>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1rem' }}>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
         {corridorDemands.map((hub, idx) => (
-          <div key={idx} className="glass-card" style={{ padding: '1.25rem', borderTop: '4px solid #0284c7' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.75rem' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <MapPin size={16} color="#0284c7" />
-                <span style={{ fontWeight: '800', fontSize: '0.95rem', color: '#0f172a' }}>{hub.city}</span>
+          <div key={idx} className="glass-card p-5 space-y-3 border-t-4 border-t-indigo-600">
+            <div className="flex items-center justify-between gap-1">
+              <div className="flex items-center gap-1.5 text-xs font-bold text-slate-900 font-outfit">
+                <MapPin size={15} className="text-indigo-600" />
+                <span>{hub.city}</span>
               </div>
-              <span className="badge badge-emerald">{hub.matchScore}</span>
+              <span className="badge-emerald text-[11px] px-2 py-0.5">{hub.matchScore}</span>
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', fontSize: '0.85rem', color: '#334155' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <span>Active Demand:</span>
-                <span style={{ fontWeight: '800', color: '#0f172a' }}>{hub.activeLoads} Loads</span>
+            <div className="space-y-2 text-xs">
+              <div className="flex justify-between">
+                <span className="text-slate-500 font-normal">Active Demand:</span>
+                <span className="font-bold text-slate-900">{hub.activeLoads} Loads</span>
               </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <span>Total Volume:</span>
-                <span style={{ fontWeight: '800', color: '#0284c7' }}>{hub.weightTons} Tons</span>
+              <div className="flex justify-between">
+                <span className="text-slate-500 font-normal">Total Volume:</span>
+                <span className="font-bold text-slate-900">{hub.weightTons} Tons</span>
               </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <span>Avg Rate:</span>
-                <span style={{ fontWeight: '800', color: '#059669' }}>{hub.avgRate}</span>
+              <div className="flex justify-between border-t border-slate-100 pt-2">
+                <span className="text-slate-500 font-normal">Avg Rate:</span>
+                <span className="font-extrabold text-emerald-600 font-outfit">{hub.avgRate}</span>
               </div>
             </div>
           </div>
@@ -55,3 +59,4 @@ export const RadarView = () => {
     </div>
   );
 };
+

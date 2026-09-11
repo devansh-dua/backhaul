@@ -1,30 +1,33 @@
 import { ShipperNavbar } from '../../components/Navbar';
 import { useAuth } from '../../context/AuthContext';
-import { ShieldCheck, Star } from 'lucide-react';
+import { ShieldCheck } from 'lucide-react';
 
 export const ShipperProfile = () => {
   const { user } = useAuth();
 
   return (
-    <div style={{ background: '#f8fafc', minHeight: '100vh', paddingBottom: '3rem', color: '#0f172a' }}>
+    <div className="min-h-screen bg-slate-50 text-slate-900 pb-24 font-sans">
       <ShipperNavbar />
 
-      <div style={{ maxWidth: '800px', margin: '0 auto', padding: '1rem 1.5rem' }}>
-        <div className="glass-panel" style={{ padding: '2rem' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem', marginBottom: '1.5rem' }}>
-            <div style={{ width: '70px', height: '70px', borderRadius: '50%', background: 'linear-gradient(135deg, #059669, #0284c7)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.75rem', fontWeight: '800', color: '#fff' }}>
-              {user?.name ? user.name[0] : 'V'}
+      <main className="max-w-4xl mx-auto px-4 sm:px-6 pt-8 space-y-6">
+        <div className="glass-panel p-6 sm:p-8 rounded-2xl space-y-6">
+          <div className="flex items-center gap-5">
+            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center text-2xl font-extrabold text-white font-outfit shadow-lg shadow-blue-500/20">
+              {user?.name ? user.name[0] : 'S'}
             </div>
             <div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <h2 style={{ fontSize: '1.6rem', fontWeight: '800', color: '#0f172a' }}>{user?.name || 'Vikram Mehta'}</h2>
-                <span className="badge badge-emerald"><ShieldCheck size={14} /> VERIFIED SHIPPER</span>
+              <div className="flex items-center gap-3">
+                <h2 className="text-2xl font-extrabold text-slate-900 font-outfit tracking-tight">{user?.name || 'Vikram Mehta'}</h2>
+                <span className="badge-emerald font-semibold">
+                  <ShieldCheck size={13} /> VERIFIED SHIPPER
+                </span>
               </div>
-              <p style={{ color: '#64748b', fontSize: '0.9rem', marginTop: '2px', fontWeight: '500' }}>{user?.company || 'Jaipur Auto Components Ltd'}</p>
+              <p className="text-xs sm:text-sm text-slate-600 font-medium mt-1">{user?.company || 'Jaipur Auto Components Ltd'}</p>
             </div>
           </div>
         </div>
-      </div>
+      </main>
     </div>
   );
 };
+

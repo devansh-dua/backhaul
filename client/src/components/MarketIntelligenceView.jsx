@@ -1,4 +1,5 @@
-import { TrendingUp, BarChart, DollarSign, Activity } from 'lucide-react';
+import { TrendingUp, BarChart, Activity, Sparkles } from 'lucide-react';
+import { StatCard } from './StatCard';
 
 export const MarketIntelligenceView = () => {
   const trends = [
@@ -12,57 +13,67 @@ export const MarketIntelligenceView = () => {
   ];
 
   return (
-    <div className="glass-panel" style={{ padding: '1.5rem' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
+    <div className="glass-panel p-6 sm:p-8 rounded-2xl space-y-6 font-sans">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200/80">
         <div>
-          <h3 style={{ fontSize: '1.15rem', color: '#0f172a', fontWeight: '800' }}>MARKET INTELLIGENCE & CORRIDOR RATES</h3>
-          <p style={{ fontSize: '0.8rem', color: '#64748b' }}>Delhi → Jaipur Corridor (NH 48) Real-Time Supply/Demand Metrics</p>
+          <div className="flex items-center gap-2">
+            <span className="badge-purple">MARKET INTELLIGENCE</span>
+            <span className="text-xs font-semibold text-slate-500 font-sans">Delhi → Jaipur Corridor</span>
+          </div>
+          <h3 className="text-lg font-extrabold text-slate-900 font-outfit tracking-tight mt-1">
+            Corridor Supply & Demand Metrics
+          </h3>
         </div>
-        <span className="badge badge-emerald">HIGH DEMAND CORRIDOR</span>
+        <span className="badge-emerald font-semibold">HIGH DEMAND CORRIDOR</span>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
-        <div className="glass-card" style={{ padding: '1rem' }}>
-          <div style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: '600' }}>Supply / Demand Index</div>
-          <div style={{ fontSize: '1.1rem', fontWeight: '800', color: '#059669', marginTop: '4px' }}>1.42 (High Demand)</div>
-        </div>
-
-        <div className="glass-card" style={{ padding: '1rem' }}>
-          <div style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: '600' }}>Avg Backhaul Rate</div>
-          <div style={{ fontSize: '1.1rem', fontWeight: '800', color: '#0284c7', marginTop: '4px' }}>₹42.50 / km</div>
-        </div>
-
-        <div className="glass-card" style={{ padding: '1rem' }}>
-          <div style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: '600' }}>Available Corridor Capacity</div>
-          <div style={{ fontSize: '1.1rem', fontWeight: '800', color: '#7c3aed', marginTop: '4px' }}>42.5 Tons</div>
-        </div>
-
-        <div className="glass-card" style={{ padding: '1rem' }}>
-          <div style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: '600' }}>Average Detour</div>
-          <div style={{ fontSize: '1.1rem', fontWeight: '800', color: '#d97706', marginTop: '4px' }}>18.4 km</div>
-        </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+        <StatCard
+          title="SUPPLY / DEMAND INDEX"
+          value="1.42"
+          subtext="High Demand Sector"
+          icon={<TrendingUp size={20} className="text-emerald-600" />}
+          trend="+12.4%"
+        />
+        <StatCard
+          title="AVG RATE / KM"
+          value="₹42.50 / km"
+          subtext="Spot rate average"
+          icon={<BarChart size={20} className="text-blue-600" />}
+          trend="+8.1%"
+        />
+        <StatCard
+          title="CORRIDOR VOLUME"
+          value="42.5 Tons"
+          subtext="Daily active payload"
+          icon={<Activity size={20} className="text-purple-600" />}
+          trend="+15.0%"
+        />
+        <StatCard
+          title="AVG DETOUR"
+          value="18.4 km"
+          subtext="Optimal pick deviation"
+          icon={<Sparkles size={20} className="text-cyan-600" />}
+          trend="-4.2%"
+        />
       </div>
 
-      {/* Bar Chart Representation of Corridor Rate Trend */}
-      <div>
-        <div style={{ fontSize: '0.85rem', fontWeight: '700', color: '#64748b', marginBottom: '0.75rem' }}>7-DAY AVERAGE BACKHAUL RATE TREND (INR)</div>
-        <div style={{ display: 'flex', alignItems: 'flex-end', gap: '12px', height: '140px', padding: '10px 0', borderBottom: '1px solid #e2e8f0' }}>
+      <div className="glass-card p-6 space-y-4">
+        <div className="flex items-center justify-between">
+          <div className="text-xs font-bold uppercase tracking-wider text-slate-500 font-outfit">
+            7-DAY AVERAGE BACKHAUL RATE TREND (INR)
+          </div>
+          <span className="badge-cyan text-xs">Delhi-Jaipur Express</span>
+        </div>
+
+        <div className="w-full h-44 flex items-end gap-3 border-b border-slate-200/80 pb-3 pt-6">
           {trends.map((item, idx) => (
-            <div key={idx} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', height: '100%', justifyContent: 'flex-end' }}>
+            <div key={idx} className="flex-1 flex flex-col items-center h-full justify-end group">
               <div
-                style={{
-                  width: '100%',
-                  height: `${(item.avgPrice / 25000) * 100}%`,
-                  background: 'linear-gradient(180deg, #2563eb 0%, #cbd5e1 100%)',
-                  borderRadius: '6px 6px 0 0',
-                  position: 'relative'
-                }}
-              >
-                <span style={{ position: 'absolute', top: '-18px', left: '50%', transform: 'translateX(-50%)', fontSize: '0.65rem', color: '#2563eb', fontWeight: '800' }}>
-                  ₹{(item.avgPrice / 1000).toFixed(1)}k
-                </span>
-              </div>
-              <span style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '6px', fontWeight: '600' }}>{item.day}</span>
+                className="w-full bg-gradient-to-t from-blue-600 to-indigo-600 rounded-t-lg transition-all duration-300 shadow-md group-hover:brightness-110"
+                style={{ height: `${(item.avgPrice / 25000) * 100}%` }}
+              />
+              <span className="text-xs font-semibold text-slate-600 mt-3 font-outfit">{item.day}</span>
             </div>
           ))}
         </div>
@@ -70,3 +81,4 @@ export const MarketIntelligenceView = () => {
     </div>
   );
 };
+

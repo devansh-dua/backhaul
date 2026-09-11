@@ -1,25 +1,62 @@
 import { ShipperNavbar } from '../../components/Navbar';
 import { StatCard } from '../../components/StatCard';
-import { DollarSign, Package, TrendingUp, ShieldCheck } from 'lucide-react';
+import { DollarSign, TrendingUp, ShieldCheck, BarChart3, Package, Zap } from 'lucide-react';
 
 export const ShipperAnalytics = () => {
   return (
-    <div style={{ background: '#f8fafc', minHeight: '100vh', paddingBottom: '3rem', color: '#0f172a' }}>
+    <div className="min-h-screen bg-slate-50 text-slate-900 pb-20 font-sans">
       <ShipperNavbar />
 
-      <div style={{ maxWidth: '1100px', margin: '0 auto', padding: '1rem 1.5rem' }}>
-        <div style={{ marginBottom: '2rem' }}>
-          <h1 style={{ fontSize: '2rem', fontWeight: '800', color: '#0f172a' }}>Shipper Logistics Analytics</h1>
-          <p style={{ color: '#64748b', fontSize: '0.9rem' }}>Savings analytics, on-time delivery rates, and carbon offset tracking</p>
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 pt-6 space-y-6">
+        {/* Header Glass Panel */}
+        <div className="glass-panel p-6 sm:p-8 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="space-y-1.5">
+            <span className="badge-purple">
+              <BarChart3 size={12} />
+              FREIGHT ANALYTICS
+            </span>
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 font-outfit tracking-tight">
+              Shipper Logistics Analytics
+            </h1>
+            <p className="text-xs sm:text-sm text-slate-600 font-normal max-w-2xl">
+              Savings analytics, on-time delivery rates, and carbon offset tracking.
+            </p>
+          </div>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1.25rem', marginBottom: '2rem' }}>
-          <StatCard title="Total Freight Cost Saved" value="₹32,450" change="32% below spot" isPositive={true} icon={DollarSign} color="#059669" />
-          <StatCard title="On-Time Delivery Rate" value="99.2%" change="+1.4%" isPositive={true} icon={ShieldCheck} color="#2563eb" />
-          <StatCard title="Shipments Completed" value="48" change="Zero damages" isPositive={true} icon={Package} color="#0284c7" />
-          <StatCard title="CO2 Offset" value="1,840 kg" change="Green Freight" isPositive={true} icon={TrendingUp} color="#7c3aed" />
+        {/* Metric Cards Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+          <StatCard
+            title="FREIGHT SAVED"
+            value="₹32,450"
+            subtext="Via backhaul capacity"
+            icon={<DollarSign size={20} className="text-emerald-600" />}
+            trend="+24.5%"
+          />
+          <StatCard
+            title="ON-TIME RATE"
+            value="99.2%"
+            subtext="Guaranteed corridor SLA"
+            icon={<TrendingUp size={20} className="text-blue-600" />}
+            trend="+2.1%"
+          />
+          <StatCard
+            title="SHIPMENTS COMPLETED"
+            value="48"
+            subtext="Total freight deliveries"
+            icon={<Package size={20} className="text-purple-600" />}
+            trend="+18.0%"
+          />
+          <StatCard
+            title="CO2 OFFSET"
+            value="1,840 kg"
+            subtext="Emissions saved"
+            icon={<ShieldCheck size={20} className="text-cyan-600" />}
+            trend="+31.2%"
+          />
         </div>
-      </div>
+      </main>
     </div>
   );
 };
+

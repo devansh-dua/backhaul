@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { Truck, Package, Lock, Mail, ArrowRight } from 'lucide-react';
+import { Truck, ArrowRight, AlertCircle, Sparkles } from 'lucide-react';
 
 export const Login = () => {
   const [email, setEmail] = useState('carrier@backhaulx.com');
@@ -31,64 +31,68 @@ export const Login = () => {
   };
 
   return (
-    <div style={{ background: '#f8fafc', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1.5rem', position: 'relative' }}>
-      <div className="glass-panel" style={{ width: '100%', maxWidth: '440px', padding: '2.5rem', position: 'relative', background: '#ffffff' }}>
-        <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-          <div style={{ width: '48px', height: '48px', borderRadius: '12px', background: 'linear-gradient(135deg, #2563eb, #0284c7)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1rem auto', color: '#fff' }}>
-            <Truck size={26} />
-          </div>
-          <h2 style={{ fontSize: '1.75rem', fontWeight: '800', color: '#0f172a' }}>Welcome Back</h2>
-          <p style={{ color: '#64748b', fontSize: '0.9rem', marginTop: '4px' }}>Sign in to access BACKHAULX AI Engine</p>
+    <div className="min-h-screen bg-slate-50 text-slate-900 flex items-center justify-center p-4 font-sans relative overflow-hidden">
+      {/* Background Glow */}
+      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-purple-200/40 rounded-full blur-3xl pointer-events-none" />
+
+      <div className="w-full max-w-md glass-card p-8 sm:p-10 space-y-6 shadow-xl relative z-10 border border-slate-200/80">
+        <div className="text-center space-y-2">
+          <Link to="/" className="inline-flex items-center gap-2.5 mb-2 group">
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-600 flex items-center justify-center text-white shadow-md shadow-purple-500/20 group-hover:scale-105 transition-transform">
+              <Truck size={20} />
+            </div>
+            <span className="text-xl font-extrabold font-outfit tracking-tight bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent">
+              BACKHAULX
+            </span>
+          </Link>
+
+          <h2 className="text-2xl font-extrabold text-slate-900 font-outfit tracking-tight">Welcome Back</h2>
+          <p className="text-xs sm:text-sm text-slate-600 font-normal">Sign in to access BACKHAULX Intelligence Engine</p>
         </div>
 
         {error && (
-          <div style={{ background: '#fef2f2', border: '1px solid #fecaca', color: '#dc2626', padding: '0.75rem', borderRadius: '8px', fontSize: '0.85rem', marginBottom: '1.25rem', textAlign: 'center', fontWeight: '600' }}>
-            {error}
+          <div className="p-3.5 bg-rose-50 border border-rose-200 text-rose-700 text-xs rounded-xl font-semibold flex items-center gap-2">
+            <AlertCircle size={16} className="shrink-0" />
+            <span>{error}</span>
           </div>
         )}
 
-        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+        <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label style={{ display: 'block', fontSize: '0.85rem', color: '#475569', marginBottom: '6px', fontWeight: '600' }}>Email Address</label>
-            <div style={{ position: 'relative' }}>
-              <Mail size={18} color="#94a3b8" style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)' }} />
-              <input
-                type="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                style={{ width: '100%', padding: '0.75rem 1rem 0.75rem 2.5rem', background: '#f8fafc', border: '1px solid #cbd5e1', borderRadius: '10px', color: '#0f172a', fontSize: '0.95rem', fontWeight: '500' }}
-              />
-            </div>
+            <label className="block text-xs font-bold text-slate-700 mb-1 font-outfit">Email Address</label>
+            <input
+              type="email"
+              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full px-4 py-2.5 bg-slate-50/80 border border-slate-200 rounded-xl text-xs font-semibold text-slate-900 focus:outline-none focus:border-indigo-500 transition-colors"
+            />
           </div>
 
           <div>
-            <label style={{ display: 'block', fontSize: '0.85rem', color: '#475569', marginBottom: '6px', fontWeight: '600' }}>Password</label>
-            <div style={{ position: 'relative' }}>
-              <Lock size={18} color="#94a3b8" style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)' }} />
-              <input
-                type="password"
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                style={{ width: '100%', padding: '0.75rem 1rem 0.75rem 2.5rem', background: '#f8fafc', border: '1px solid #cbd5e1', borderRadius: '10px', color: '#0f172a', fontSize: '0.95rem', fontWeight: '500' }}
-              />
-            </div>
+            <label className="block text-xs font-bold text-slate-700 mb-1 font-outfit">Password</label>
+            <input
+              type="password"
+              required
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="w-full px-4 py-2.5 bg-slate-50/80 border border-slate-200 rounded-xl text-xs font-semibold text-slate-900 focus:outline-none focus:border-indigo-500 transition-colors"
+            />
           </div>
 
-          {/* Quick Demo Login Credentials Buttons */}
-          <div style={{ display: 'flex', gap: '0.5rem', margin: '0.25rem 0' }}>
+          {/* Quick Demo Credentials */}
+          <div className="grid grid-cols-2 gap-2.5 pt-1">
             <button
               type="button"
               onClick={() => { setEmail('carrier@backhaulx.com'); setPassword('password123'); }}
-              style={{ flex: 1, padding: '0.4rem', background: '#e0f2fe', border: '1px solid #bae6fd', borderRadius: '6px', color: '#0284c7', fontSize: '0.75rem', fontWeight: '700', cursor: 'pointer' }}
+              className="btn-secondary text-[11px] py-2 flex items-center justify-center font-outfit"
             >
               Demo Carrier
             </button>
             <button
               type="button"
               onClick={() => { setEmail('shipper@backhaulx.com'); setPassword('password123'); }}
-              style={{ flex: 1, padding: '0.4rem', background: '#d1fae5', border: '1px solid #a7f3d0', borderRadius: '6px', color: '#059669', fontSize: '0.75rem', fontWeight: '700', cursor: 'pointer' }}
+              className="btn-secondary text-[11px] py-2 flex items-center justify-center font-outfit"
             >
               Demo Shipper
             </button>
@@ -97,16 +101,18 @@ export const Login = () => {
           <button
             type="submit"
             disabled={loading}
-            style={{ background: 'linear-gradient(135deg, #2563eb, #1d4ed8)', border: 'none', color: '#fff', padding: '0.85rem', borderRadius: '10px', fontWeight: '700', fontSize: '1rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', boxShadow: '0 4px 14px rgba(37, 99, 235, 0.3)' }}
+            className="btn-primary w-full py-3 text-xs flex items-center justify-center gap-2 shadow-md disabled:opacity-50"
           >
-            {loading ? 'Authenticating...' : 'Sign In'} <ArrowRight size={18} />
+            {loading ? 'Authenticating...' : 'Sign In'}
+            <ArrowRight size={15} />
           </button>
         </form>
 
-        <div style={{ textAlign: 'center', marginTop: '1.5rem', fontSize: '0.85rem', color: '#64748b' }}>
-          Don't have an account? <Link to="/register" style={{ color: '#2563eb', fontWeight: '700' }}>Register here</Link>
+        <div className="text-center text-xs text-slate-600 font-normal pt-2">
+          Don't have an account? <Link to="/register" className="text-indigo-600 font-bold hover:underline font-outfit">Register here</Link>
         </div>
       </div>
     </div>
   );
 };
+

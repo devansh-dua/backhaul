@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Sliders, Package, Layers, TrendingUp, ShieldCheck } from 'lucide-react';
+import { Sliders, Package, CheckCircle2, ShieldCheck, Layers } from 'lucide-react';
 
 export const MultiLoadOptimizerCard = () => {
   const [vehicleCapacity] = useState(12.0);
@@ -16,67 +16,98 @@ export const MultiLoadOptimizerCard = () => {
   const selectedLoads = candidateLoads.filter(l => l.selected);
   const totalWeight = selectedLoads.reduce((sum, l) => sum + l.weight, 0); // 7.5T
   const grossRevenue = selectedLoads.reduce((sum, l) => sum + l.price, 0); // 21,700
-  const maxDetour = Math.max(...selectedLoads.map(l => l.detour)); // 15km
   const estCost = 2800;
   const netContribution = grossRevenue - estCost;
 
   return (
-    <div className="glass-panel" style={{ padding: '1.5rem' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: '#f3e8ff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <Sliders size={20} color="#7c3aed" />
+    <div className="glass-panel p-6 sm:p-8 rounded-2xl space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200/80">
+        <div className="flex items-center gap-3.5">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center text-white shrink-0 shadow-md shadow-blue-500/20">
+            <Layers size={20} />
           </div>
           <div>
-            <h3 style={{ fontSize: '1.15rem', color: '#0f172a', fontWeight: '800' }}>MULTI-LOAD KNAPSACK OPTIMIZER</h3>
-            <p style={{ fontSize: '0.8rem', color: '#64748b' }}>Combines multiple compatible shipments into available 7.8T truck capacity</p>
+            <div className="flex items-center gap-2">
+              <span className="badge-purple">MULTI-LOAD OPTIMIZER</span>
+              <span className="text-xs font-semibold text-slate-500 font-sans">Knapsack Algorithm</span>
+            </div>
+            <h3 className="text-lg font-extrabold text-slate-900 font-outfit tracking-tight mt-0.5">
+              Corridor Knapsack Load Combinator
+            </h3>
           </div>
         </div>
-        <span className="badge badge-purple">OPTIMAL COMBINATION FOUND</span>
+
+        <span className="badge-emerald font-semibold">
+          <ShieldCheck size={14} />
+          OPTIMAL COMBINATION FOUND
+        </span>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
-        {/* Load Selection List */}
-        <div>
-          <div style={{ fontSize: '0.85rem', fontWeight: '700', color: '#64748b', marginBottom: '0.75rem' }}>AVAILABLE CANDIDATE LOADS</div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Candidate Loads List */}
+        <div className="space-y-3">
+          <div className="text-xs font-bold uppercase tracking-wider text-slate-500 font-outfit">
+            CANDIDATE LOADS ALONG CORRIDOR
+          </div>
+          <div className="space-y-2.5">
             {candidateLoads.map((load) => (
-              <div key={load.id} className="glass-card" style={{ padding: '0.75rem 1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderColor: load.selected ? '#7c3aed' : '#e2e8f0' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  <input type="checkbox" checked={load.selected} readOnly style={{ accentColor: '#7c3aed' }} />
+              <div
+                key={load.id}
+                className={`glass-card p-4 flex items-center justify-between transition-all ${
+                  load.selected ? 'border-purple-300 bg-purple-50/20 shadow-md' : 'opacity-60'
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <input
+                    type="checkbox"
+                    checked={load.selected}
+                    readOnly
+                    className="accent-indigo-600 w-4 h-4 cursor-pointer"
+                  />
                   <div>
-                    <div style={{ fontSize: '0.85rem', fontWeight: '700', color: '#0f172a' }}>{load.name}</div>
-                    <div style={{ fontSize: '0.75rem', color: '#64748b' }}>Weight: {load.weight}T | Detour: +{load.detour}km</div>
+                    <div className="text-xs font-bold text-slate-900 font-outfit">{load.name}</div>
+                    <div className="text-[11px] text-slate-500 mt-0.5">
+                      Weight: {load.weight}T · Detour: +{load.detour}km
+                    </div>
                   </div>
                 </div>
-                <span style={{ fontSize: '0.9rem', fontWeight: '800', color: '#059669' }}>₹{load.price.toLocaleString('en-IN')}</span>
+                <span className="font-extrabold text-xs text-slate-900 font-outfit">
+                  ₹{load.price.toLocaleString('en-IN')}
+                </span>
               </div>
             ))}
           </div>
         </div>
 
-        {/* Calculated Metrics Summary */}
-        <div className="glass-card" style={{ padding: '1.25rem', background: '#f8fafc' }}>
-          <div style={{ fontSize: '0.85rem', fontWeight: '700', color: '#64748b', marginBottom: '0.75rem' }}>COMBINED OPTIMIZATION RESULTS</div>
-          
-          <div style={{ marginBottom: '1rem' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', color: '#334155', marginBottom: '4px', fontWeight: '600' }}>
-              <span>Capacity Utilisation ({totalWeight}T / {availableCapacity}T)</span>
-              <span style={{ color: '#0284c7', fontWeight: '700' }}>96.1%</span>
+        {/* Multi-Load Economics Summary */}
+        <div className="glass-card p-6 space-y-5 bg-gradient-to-br from-white/90 to-purple-50/30">
+          <div className="text-xs font-bold uppercase tracking-wider text-slate-500 font-outfit">
+            COMBINED OPTIMIZATION METRICS
+          </div>
+
+          <div className="space-y-2">
+            <div className="flex justify-between text-xs font-semibold text-slate-700 font-outfit">
+              <span>Capacity Utilisation ({totalWeight.toFixed(1)}T / {availableCapacity}T)</span>
+              <span className="font-extrabold text-slate-900">96.1%</span>
             </div>
-            <div style={{ width: '100%', height: '8px', background: '#e2e8f0', borderRadius: '4px', overflow: 'hidden' }}>
-              <div style={{ width: `${(totalWeight / availableCapacity) * 100}%`, height: '100%', background: 'linear-gradient(to right, #2563eb, #059669)' }} />
+            <div className="w-full bg-slate-200/80 h-2.5 rounded-full overflow-hidden border border-slate-300/60">
+              <div className="bg-gradient-to-r from-blue-600 to-indigo-600 h-full rounded-full" style={{ width: '96.1%' }} />
             </div>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', marginTop: '1rem' }}>
-            <div style={{ background: '#ffffff', padding: '0.75rem', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
-              <div style={{ fontSize: '0.75rem', color: '#64748b' }}>Gross Revenue</div>
-              <div style={{ fontSize: '1.1rem', fontWeight: '800', color: '#0f172a' }}>₹{grossRevenue.toLocaleString('en-IN')}</div>
+          <div className="grid grid-cols-2 gap-4 pt-2">
+            <div className="glass-panel p-4 bg-white/90">
+              <div className="text-[10px] font-bold text-slate-500 uppercase font-outfit">Gross Revenue</div>
+              <div className="text-lg font-extrabold text-slate-900 font-outfit mt-0.5">
+                ₹{grossRevenue.toLocaleString('en-IN')}
+              </div>
             </div>
-            <div style={{ background: '#ffffff', padding: '0.75rem', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
-              <div style={{ fontSize: '0.75rem', color: '#64748b' }}>Net Contribution</div>
-              <div style={{ fontSize: '1.1rem', fontWeight: '800', color: '#059669' }}>+₹{netContribution.toLocaleString('en-IN')}</div>
+
+            <div className="glass-panel p-4 bg-white/90">
+              <div className="text-[10px] font-bold text-slate-500 uppercase font-outfit">Net Contribution</div>
+              <div className="text-lg font-extrabold text-emerald-600 font-outfit mt-0.5">
+                +₹{netContribution.toLocaleString('en-IN')}
+              </div>
             </div>
           </div>
         </div>
@@ -84,3 +115,4 @@ export const MultiLoadOptimizerCard = () => {
     </div>
   );
 };
+

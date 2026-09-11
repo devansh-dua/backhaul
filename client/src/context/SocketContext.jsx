@@ -12,7 +12,7 @@ export const SocketProvider = ({ children }) => {
   const { user } = useAuth();
 
   useEffect(() => {
-    const newSocket = io('http://localhost:5000', {
+    const newSocket = io(import.meta.env.VITE_SOCKET_URL || 'http://localhost:5001', {
       transports: ['polling', 'websocket'],
       reconnection: true,
       reconnectionAttempts: 10,
