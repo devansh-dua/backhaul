@@ -6,7 +6,9 @@ export const VoiceCopilot = ({ onTranscriptComplete, selectedLanguage = 'hi', on
   const [transcript, setTranscript] = useState('');
   const [ttsEnabled, setTtsEnabled] = useState(true);
   const [speechSupported, setSpeechSupported] = useState(true);
+  
   const recognitionRef = useRef(null);
+  const accumulatedTranscriptRef = useRef('');
 
   useEffect(() => {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -28,15 +30,21 @@ export const VoiceCopilot = ({ onTranscriptComplete, selectedLanguage = 'hi', on
 
       recognition.onstart = () => {
         setIsListening(true);
+        accumulatedTranscriptRef.current = '';
         setTranscript('');
       };
 
       recognition.onresult = (event) => {
         let currentTranscript = '';
         for (let i = event.resultIndex; i < event.results.length; i++) {
-          currentTranscript += event.results[i][0].transcript;
+          if (event.results[i][0] && event.results[i][0].transcript) {
+            currentTranscript += event.results[i][0].transcript;
+          }
         }
-        setTranscript(currentTranscript);
+        if (currentTranscript.trim()) {
+          accumulatedTranscriptRef.current = currentTranscript.trim();
+          setTranscript(currentTranscript.trim());
+        }
       };
 
       recognition.onerror = (event) => {
@@ -46,8 +54,11 @@ export const VoiceCopilot = ({ onTranscriptComplete, selectedLanguage = 'hi', on
 
       recognition.onend = () => {
         setIsListening(false);
-        if (transcript && transcript.trim()) {
-          onTranscriptComplete(transcript);
+        const finalUtterance = accumulatedTranscriptRef.current.trim();
+        if (finalUtterance && onTranscriptComplete) {
+          onTranscriptComplete(finalUtterance);
+          accumulatedTranscriptRef.current = '';
+          setTranscript('');
         }
       };
 
@@ -55,37 +66,21 @@ export const VoiceCopilot = ({ onTranscriptComplete, selectedLanguage = 'hi', on
     } else {
       setSpeechSupported(false);
     }
-  }, [selectedLanguage, transcript]);
+  }, [selectedLanguage]); // Dependency ONLY on selectedLanguage so recognition is not recreated during speech
 
   const toggleListening = () => {
     if (!recognitionRef.current) return;
     if (isListening) {
       recognitionRef.current.stop();
     } else {
+      accumulatedTranscriptRef.current = '';
       setTranscript('');
       try {
         recognitionRef.current.start();
       } catch (e) {
-        // Handle restart
+        // Handle restart if already active
       }
     }
-  };
-
-  const handleSpeakText = (textToSpeak) => {
-    if (!ttsEnabled || !window.speechSynthesis) return;
-    window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(textToSpeak);
-    const langLocales = {
-      'hi': 'hi-IN',
-      'en': 'en-IN',
-      'hi-en': 'hi-IN',
-      'pa': 'pa-IN',
-      'mr': 'mr-IN',
-      'gu': 'gu-IN'
-    };
-    utterance.lang = langLocales[selectedLanguage] || 'hi-IN';
-    utterance.rate = 0.95;
-    window.speechSynthesis.speak(utterance);
   };
 
   return (

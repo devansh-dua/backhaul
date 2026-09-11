@@ -65,6 +65,15 @@ export const DriverCopilotPage = () => {
 
       if (res.data) {
         setCopilotResponse(res.data.response);
+        if (window.speechSynthesis) {
+          try {
+            window.speechSynthesis.cancel();
+            const utt = new SpeechSynthesisUtterance(res.data.response);
+            utt.lang = 'hi-IN';
+            utt.rate = 0.95;
+            window.speechSynthesis.speak(utt);
+          } catch(e) {}
+        }
 
         if (res.data.requiresConfirmation && res.data.confirmButtons) {
           setPendingConfirmation({

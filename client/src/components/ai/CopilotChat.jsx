@@ -33,9 +33,26 @@ export const CopilotChat = ({ clientContext = {}, onActionExecuted }) => {
 
   const chatEndRef = useRef(null);
 
-  useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages, pendingConfirmation]);
+  const speakCopilotText = (text, lang = selectedLanguage) => {
+    if (!window.speechSynthesis || !text) return;
+    try {
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(text);
+      const langLocales = {
+        'hi': 'hi-IN',
+        'en': 'en-IN',
+        'hi-en': 'hi-IN',
+        'pa': 'pa-IN',
+        'mr': 'mr-IN',
+        'gu': 'gu-IN'
+      };
+      utterance.lang = langLocales[lang] || 'hi-IN';
+      utterance.rate = 0.95;
+      window.speechSynthesis.speak(utterance);
+    } catch (e) {
+      //
+    }
+  };
 
   const handleSendText = async (textToSend = inputMessage) => {
     if (!textToSend || !textToSend.trim() || isProcessing) return;
@@ -72,6 +89,7 @@ export const CopilotChat = ({ clientContext = {}, onActionExecuted }) => {
         };
 
         setMessages(prev => [...prev, copilotMsgObj]);
+        speakCopilotText(copilotData.response, copilotData.language || selectedLanguage);
 
         if (copilotData.requiresConfirmation && copilotData.confirmButtons) {
           setPendingConfirmation({
