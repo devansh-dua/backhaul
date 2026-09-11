@@ -7,7 +7,7 @@ import { AcceptRejectCard } from '../../components/AcceptRejectCard';
 import { analyticsApi } from '../../services/analytics.api';
 import { shipmentApi } from '../../services/shipment.api';
 import { matchApi } from '../../services/match.api';
-import { DollarSign, Truck, ShieldCheck, TrendingUp, Zap, ArrowRight, ChevronRight } from 'lucide-react';
+import { DollarSign, Truck, ShieldCheck, TrendingUp, Zap, ArrowRight, ChevronRight, Sparkles } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 export const CarrierDashboard = () => {
@@ -118,34 +118,36 @@ export const CarrierDashboard = () => {
   };
 
   return (
-    <div style={{ background: '#f8fafc', minHeight: '100vh', paddingBottom: '3rem', color: '#0f172a' }}>
+    <div className="min-h-screen bg-slate-50 text-slate-900 pb-20 font-sans">
       <CarrierNavbar />
 
-      <main className="app-container" style={{ pt: '2rem', spaceY: '2rem' }}>
-        {/* Header Title Banner */}
-        <div style={{ paddingBottom: '1.5rem', borderBottom: '1px solid #e2e8f0', marginTop: '1rem' }}>
-          <span className="badge badge-purple" style={{ marginBottom: '0.75rem' }}>
-            <Zap size={14} /> CARRIER OPTIMIZATION ENGINE
-          </span>
-          <h1 style={{ fontSize: '2.5rem', fontWeight: '800', color: '#0f172a', letterSpacing: '-0.03em' }}>
-            Turn Empty Miles Into Guaranteed Profit
-          </h1>
-          <p style={{ color: '#475569', fontSize: '1rem', marginTop: '4px', fontWeight: '500' }}>
-            BackhaulX finds the most profitable way to use the capacity your truck already has — without creating another trip.
-          </p>
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 pt-6 space-y-8">
+        {/* Header Glass Panel */}
+        <div className="glass-panel p-6 sm:p-8 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+          <div className="space-y-2 max-w-3xl">
+            <span className="badge-purple">
+              <Zap size={14} /> CARRIER OPTIMIZATION ENGINE
+            </span>
+            <h1 className="text-3xl sm:text-4xl font-extrabold text-slate-900 font-outfit tracking-tight leading-tight">
+              Turn Empty Miles Into Guaranteed Profit
+            </h1>
+            <p className="text-sm sm:text-base text-slate-600 font-normal leading-relaxed">
+              BackhaulX surfaces compatible freight for your truck's scheduled return route — eliminating empty deadhead runs.
+            </p>
 
-          <div style={{ display: 'flex', gap: '1rem', marginTop: '1.25rem' }}>
-            <button onClick={scrollToOpportunities} className="btn-primary">
-              VIEW TODAY'S OPPORTUNITIES <ArrowRight size={16} />
-            </button>
-            <button onClick={() => navigate('/carrier/capacity')} className="btn-secondary">
-              VIEW FLEET
-            </button>
+            <div className="flex flex-wrap items-center gap-3 pt-2">
+              <button onClick={scrollToOpportunities} className="btn-primary text-xs px-5 py-2.5">
+                View Today's Opportunities <ArrowRight size={15} />
+              </button>
+              <button onClick={() => navigate('/carrier/capacity')} className="btn-secondary text-xs px-4 py-2.5">
+                Manage Fleet Capacity
+              </button>
+            </div>
           </div>
         </div>
 
-        {/* 5-Column Stat Cards matching Landing Page */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', margin: '2rem 0' }}>
+        {/* 5-Column Stat Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
           <StatCard title="Today's Revenue" value={`₹${(stats.todayRevenue || 21700).toLocaleString('en-IN')}`} change="18.4%" isPositive={true} icon={DollarSign} />
           <StatCard title="Unused Capacity" value={`${stats.unusedCapacityTons || 7.8} Tons`} change="RJ-104 Available" isPositive={true} icon={Truck} />
           <StatCard title="Empty KM Avoided" value={`${(stats.emptyKmAvoided || 3420).toLocaleString()} km`} change="260 km today" isPositive={true} icon={TrendingUp} />
@@ -153,25 +155,30 @@ export const CarrierDashboard = () => {
           <StatCard title="CO2 Saved" value={`${(stats.co2SavedKg || 2907).toLocaleString()} kg`} change="Green Logistics" isPositive={true} icon={ShieldCheck} />
         </div>
 
-        {/* AI Autopilot Executive Recommendation Banner */}
-        <div style={{ marginBottom: '2rem' }}>
+        {/* AI Autopilot Recommendation Card */}
+        <div>
           <AIRecommendationCard onAccept={handleAcceptPlan} />
         </div>
 
-        {/* Today's Opportunities Data Table */}
-        <div ref={opportunitiesRef} style={{ marginBottom: '2rem' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+        {/* Opportunities Table Glass Panel */}
+        <div ref={opportunitiesRef} className="glass-panel p-6 sm:p-8 rounded-2xl space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-200/80 pb-4">
             <div>
-              <span className="badge badge-cyan" style={{ marginBottom: '0.5rem' }}>AVAILABLE CAPACITY MATCHES</span>
-              <h2 style={{ fontSize: '1.5rem', fontWeight: '800', color: '#0f172a' }}>Today's Backhaul Opportunities</h2>
+              <span className="badge-cyan">AVAILABLE CAPACITY MATCHES</span>
+              <h2 className="text-xl sm:text-2xl font-extrabold text-slate-900 font-outfit tracking-tight mt-1">
+                Today's Backhaul Opportunities
+              </h2>
             </div>
-            <button onClick={() => navigate('/carrier/loads')} style={{ background: 'transparent', border: 'none', color: '#2563eb', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.9rem' }}>
+            <button
+              onClick={() => navigate('/carrier/loads')}
+              className="text-xs font-bold text-indigo-600 hover:text-indigo-800 transition-colors flex items-center gap-1 font-outfit"
+            >
               View All Loads ({opportunities.length}) <ChevronRight size={16} />
             </button>
           </div>
 
-          <div className="table-container">
-            <table className="tech-table">
+          <div className="overflow-x-auto">
+            <table className="tech-table w-full">
               <thead>
                 <tr>
                   <th>Route</th>
@@ -181,35 +188,34 @@ export const CarrierDashboard = () => {
                   <th>Revenue</th>
                   <th>Detour</th>
                   <th>Match Score</th>
-                  <th style={{ textAlign: 'right' }}>Action</th>
+                  <th className="text-right">Action</th>
                 </tr>
               </thead>
               <tbody>
                 {opportunities.map((opp) => (
-                  <tr key={opp.id}>
-                    <td style={{ fontWeight: '800', color: '#0f172a' }}>{opp.route}</td>
-                    <td style={{ fontWeight: '600', color: '#334155' }}>{opp.cargo}</td>
-                    <td className="font-mono-num" style={{ fontWeight: '700' }}>{opp.weight}</td>
-                    <td style={{ fontSize: '0.8rem', color: '#64748b' }}>
+                  <tr key={opp.id} className="hover:bg-purple-50/40 transition-colors">
+                    <td className="font-extrabold text-slate-900 font-outfit">{opp.route}</td>
+                    <td className="font-medium text-slate-700">{opp.cargo}</td>
+                    <td className="font-semibold text-slate-900 font-outfit">{opp.weight}</td>
+                    <td className="text-xs text-slate-500 font-normal">
                       <div>Pickup: {opp.pickup}</div>
                       <div>Deadline: {opp.deadline}</div>
                     </td>
-                    <td className="font-mono-num" style={{ fontWeight: '800', color: '#0f172a' }}>
+                    <td className="font-extrabold text-slate-900 font-outfit text-base">
                       ₹{opp.revenue.toLocaleString('en-IN')}
                     </td>
-                    <td className="font-mono-num" style={{ fontWeight: '700', color: '#0284c7' }}>
+                    <td className="font-semibold text-amber-600">
                       {opp.detour}
                     </td>
                     <td>
-                      <span className="badge badge-emerald">{opp.matchScore}% MATCH</span>
+                      <span className="badge-emerald font-semibold">{opp.matchScore}% Match</span>
                     </td>
-                    <td style={{ textAlign: 'right' }}>
+                    <td className="text-right">
                       <button
                         onClick={() => handleAcceptPlan({ grossRevenueINR: opp.revenue, detourKm: parseInt(opp.detour) || 12 })}
-                        className="btn-primary"
-                        style={{ padding: '0.45rem 1rem', fontSize: '0.85rem' }}
+                        className="btn-primary text-xs px-3.5 py-1.5 inline-flex items-center gap-1"
                       >
-                        VIEW LOAD
+                        View Load <ArrowRight size={13} />
                       </button>
                     </td>
                   </tr>
@@ -219,14 +225,14 @@ export const CarrierDashboard = () => {
           </div>
         </div>
 
-        {/* Route Corridor Map & Accept/Reject Intelligence Grid */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1.5rem', marginBottom: '2rem' }}>
-          <div style={{ gridColumn: 'span 2' }}>
+        {/* Route Corridor Map & AI Accept/Reject Cards Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2">
             <RouteMap />
           </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-            <h3 style={{ fontSize: '1.2rem', fontWeight: '800', color: '#0f172a' }}>AI Accept / Reject Recommendation</h3>
+          <div className="space-y-4">
+            <h3 className="text-lg font-extrabold text-slate-900 font-outfit">AI Accept / Reject Recommendations</h3>
             <AcceptRejectCard
               decision="ACCEPT"
               confidence={94}
@@ -255,3 +261,4 @@ export const CarrierDashboard = () => {
     </div>
   );
 };
+
