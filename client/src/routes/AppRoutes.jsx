@@ -15,6 +15,7 @@ import { WhatIfPage } from '../pages/Carrier/WhatIfPage';
 import { MarketIntelligencePage } from '../pages/Carrier/MarketIntelligencePage';
 import { CarrierProfile } from '../pages/Carrier/CarrierProfile';
 import { DriverCopilotPage } from '../pages/Carrier/DriverCopilotPage';
+import { TrustPage } from '../pages/Trust/TrustPage';
 
 // Shipper Pages
 import { ShipperDashboard } from '../pages/Shipper/ShipperDashboard';
@@ -46,6 +47,7 @@ export const AppRoutes = () => {
         <Route path="/carrier/trips" element={<CarrierTrips />} />
         <Route path="/carrier/analytics" element={<CarrierAnalytics />} />
         <Route path="/carrier/radar" element={<RadarPage />} />
+        <Route path="/carrier/trust" element={<TrustPage />} />
         <Route path="/carrier/optimizer" element={<OptimizerPage />} />
         <Route path="/carrier/what-if" element={<WhatIfPage />} />
         <Route path="/carrier/market-intelligence" element={<MarketIntelligencePage />} />
@@ -58,6 +60,7 @@ export const AppRoutes = () => {
         <Route path="/shipper/post-shipment" element={<PostShipment />} />
         <Route path="/shipper/shipments" element={<MyShipments />} />
         <Route path="/shipper/capacity" element={<FindCapacity />} />
+        <Route path="/shipper/trust" element={<TrustPage />} />
         <Route path="/shipper/matches" element={<MyShipments />} />
         <Route path="/shipper/trips" element={<ShipperTrips />} />
         <Route path="/shipper/analytics" element={<ShipperAnalytics />} />

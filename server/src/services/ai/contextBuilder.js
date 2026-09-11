@@ -5,6 +5,7 @@ const Driver = require('../../models/Driver');
 const Capacity = require('../../models/Capacity');
 const Shipment = require('../../models/Shipment');
 const candidateMatcher = require('./candidateMatcher');
+const trustService = require('../trust.service');
 
 class ContextBuilder {
   /**
@@ -14,13 +15,36 @@ class ContextBuilder {
     const user = await User.findById(userId).select('-password');
     const userRole = role || user?.role || 'CARRIER';
     
+    let trustProfile = null;
+    let topPartners = [];
+    if (user?._id) {
+      try {
+        trustProfile = await trustService.getTrustProfile(user._id);
+        topPartners = await trustService.getTopTrustedPartners(user._id);
+      } catch (e) {
+        console.error('ContextBuilder trust fetching error:', e.message);
+      }
+    }
+
     let contextData = {
       user: {
         id: user?._id,
         name: user?.name,
         role: userRole,
-        companyName: user?.companyName,
-        trustScore: user?.trustScore || 4.8
+        companyName: user?.companyName || user?.company,
+        trustScore: trustProfile?.trustScore || null,
+        displayScore: trustProfile?.displayScore || 'New Partner',
+        statusLabel: trustProfile?.statusLabel || 'New Partner',
+        trustProfile: trustProfile ? {
+          completedShipments: trustProfile.completedShipments,
+          onTimeRate: trustProfile.onTimeRate,
+          cancellationRate: trustProfile.cancellationRate,
+          repeatPartnersCount: trustProfile.repeatPartnersCount,
+          ratingsCount: trustProfile.ratingsCount,
+          averageRating: trustProfile.averageRating,
+          recentRatings: trustProfile.recentRatings
+        } : null,
+        topPartners: topPartners.slice(0, 5)
       },
       page: clientContext.page || 'dashboard',
       clientContext

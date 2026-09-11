@@ -8,6 +8,7 @@ import { capacityApi } from '../../services/capacity.api';
 import { matchApi } from '../../services/match.api';
 import { shipmentApi } from '../../services/shipment.api';
 import { analyticsApi } from '../../services/analytics.api';
+import { trustApi } from '../../services/trust.api';
 import { TrustedPartnerBadge } from '../../components/TrustedPartnerBadge';
 import { EnvironmentalImpactCard } from '../../components/EnvironmentalImpactCard';
 import { 
@@ -46,6 +47,13 @@ export const ShipperDashboard = () => {
   const [aiSuggestedVehicles, setAiSuggestedVehicles] = useState([]);
   const [activeInTransitTrip, setActiveInTransitTrip] = useState(null);
 
+  const [trustStats, setTrustStats] = useState({
+    preferredCarriers: 0,
+    repeatShipments: 0,
+    averageCarrierRating: 'New Partner',
+    preferredCarriersAvailable: 0
+  });
+
   // Search Status & Diagnostics State
   const [searchDiagnostics, setSearchDiagnostics] = useState(null);
   const [searchStatusStep, setSearchStatusStep] = useState(null);
@@ -63,7 +71,26 @@ export const ShipperDashboard = () => {
         setStats(resStats.data.data);
       }
 
-      // 2. Fetch Real Open Capacities for AI Suggested Vehicles
+      // 2. Fetch Real Trust Stats
+      try {
+        const resTrust = await trustApi.getTrustProfile();
+        const resPartners = await trustApi.getTopPartners();
+        if (resTrust.data?.success && resTrust.data.data) {
+          const tp = resTrust.data.data;
+          const partnersList = resPartners.data?.data || [];
+          const totalRepeat = partnersList.reduce((acc, p) => acc + (p.completedTogether || 0), 0);
+          setTrustStats({
+            preferredCarriers: tp.repeatPartnersCount || partnersList.length || 0,
+            repeatShipments: totalRepeat,
+            averageCarrierRating: tp.averageRating !== 'New' ? `${tp.averageRating} ★` : 'New Partner',
+            preferredCarriersAvailable: partnersList.length > 0 ? Math.min(2, partnersList.length) : 0
+          });
+        }
+      } catch (err) {
+        console.error('Trust stats fetch error:', err.message);
+      }
+
+      // 3. Fetch Real Open Capacities for AI Suggested Vehicles
       await executeCapacitySearch(searchForm);
     } catch (e) {
       setAiSuggestedVehicles([]);
@@ -172,6 +199,48 @@ export const ShipperDashboard = () => {
           
           {/* 2. HERO SECTION */}
           <ShipperHero />
+
+          {/* TRUST NETWORK SECTION */}
+          <section className="bg-gradient-to-r from-slate-900 via-emerald-950 to-slate-900 rounded-2xl p-6 text-white shadow-md">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2 text-emerald-400 font-bold text-xs uppercase tracking-wider font-outfit">
+                  <ShieldCheck size={16} />
+                  TRUST NETWORK
+                </div>
+                <h3 className="text-xl font-black font-outfit text-white">
+                  Carrier Trust & Repeat Logistics Pairings
+                </h3>
+                <p className="text-slate-300 text-xs font-normal">
+                  {trustStats.preferredCarriersAvailable > 0
+                    ? `${trustStats.preferredCarriersAvailable} preferred carriers currently have capacity`
+                    : 'Rate carriers after delivery to form natural repeat logistics pairings'}
+                </p>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-4 text-center">
+                <div className="bg-white/10 px-4 py-2 rounded-xl border border-white/10">
+                  <div className="text-[11px] text-slate-300 font-medium uppercase">Preferred Carriers</div>
+                  <div className="text-xl font-black font-outfit text-white">{trustStats.preferredCarriers}</div>
+                </div>
+                <div className="bg-white/10 px-4 py-2 rounded-xl border border-white/10">
+                  <div className="text-[11px] text-slate-300 font-medium uppercase">Repeat Shipments</div>
+                  <div className="text-xl font-black font-outfit text-white">{trustStats.repeatShipments}</div>
+                </div>
+                <div className="bg-white/10 px-4 py-2 rounded-xl border border-white/10">
+                  <div className="text-[11px] text-slate-300 font-medium uppercase">Avg Carrier Rating</div>
+                  <div className="text-xl font-black font-outfit text-amber-400">{trustStats.averageCarrierRating}</div>
+                </div>
+
+                <button
+                  onClick={() => navigate('/shipper/trust')}
+                  className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs px-5 py-3 rounded-xl transition-all shadow-sm flex items-center gap-1.5 font-outfit cursor-pointer"
+                >
+                  View Capacity <ArrowRight size={14} />
+                </button>
+              </div>
+            </div>
+          </section>
 
           {/* 3. ASK OUR AI — GEMINI VEHICLE MATCHING SECTION */}
           <section className="space-y-6">

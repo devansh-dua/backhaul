@@ -52,7 +52,7 @@ export const CarrierNavbar = () => {
     { label: 'Find Loads', path: '/carrier/loads', icon: Package },
     { label: 'My Capacity', path: '/carrier/capacity', icon: Truck },
     { label: 'Trips', path: '/carrier/trips', icon: Compass },
-    { label: 'Radar', path: '/carrier/radar', icon: Cpu },
+    { label: 'Trust', path: '/carrier/trust', icon: ShieldCheck },
     { label: 'Multi-Load', path: '/carrier/optimizer', icon: Sliders },
     { label: 'What-If', path: '/carrier/what-if', icon: BarChart3 },
   ];
@@ -156,6 +156,7 @@ export const ShipperNavbar = () => {
     { label: 'Post Shipment', path: '/shipper/post-shipment', icon: Package },
     { label: 'My Shipments', path: '/shipper/shipments', icon: Package },
     { label: 'Find Capacity', path: '/shipper/capacity', icon: Truck },
+    { label: 'Trust', path: '/shipper/trust', icon: ShieldCheck },
     { label: 'Analytics', path: '/shipper/analytics', icon: BarChart3 },
   ];
 

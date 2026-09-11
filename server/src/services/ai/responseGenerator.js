@@ -302,6 +302,49 @@ class ResponseGenerator {
       return { response: `Abhi koi active trip nahi chal raha hai. Aap load search karke trip start kar sakte hain.`, actionType: 'INFO' };
     }
 
+    if (intent === 'QUERY_PARTNER_TRUST') {
+      const topPartners = context.user?.topPartners || [];
+      const topPartner = topPartners[0];
+      const trustProfile = context.user?.trustProfile;
+
+      if (topPartner && topPartner.completedTogether > 0) {
+        if (language === 'hi' || language === 'hi-en') {
+          return {
+            response: `Is partner (${topPartner.companyName}) ke saath aapne pehle ${topPartner.completedTogether} shipments complete kiye hain. Average rating ${topPartner.rating || 4.9}★ hai aur 100% successful delivery record hai.`,
+            actionType: 'INFO'
+          };
+        }
+        return {
+          response: `You have successfully completed ${topPartner.completedTogether} shipments with ${topPartner.companyName}. Average rating is ${topPartner.rating || 4.9}★ with 100% delivery success rate.`,
+          actionType: 'INFO'
+        };
+      }
+
+      if (trustProfile && trustProfile.completedShipments > 0) {
+        if (language === 'hi' || language === 'hi-en') {
+          return {
+            response: `Aapka platform Trust Score ${trustProfile.averageRating || 4.8}★ hai based on ${trustProfile.completedShipments} completed shipments with ${trustProfile.onTimeRate} on-time delivery rate.`,
+            actionType: 'INFO'
+          };
+        }
+        return {
+          response: `Your platform Trust Score is ${trustProfile.averageRating || 4.8}★ based on ${trustProfile.completedShipments} completed shipments with a ${trustProfile.onTimeRate} on-time rate.`,
+          actionType: 'INFO'
+        };
+      }
+
+      if (language === 'hi' || language === 'hi-en') {
+        return {
+          response: `Is partner ke saath aapka abhi koi previous shipment record nahi hai. Platform par naye partners "New Partner" display hote hain.`,
+          actionType: 'INFO'
+        };
+      }
+      return {
+        response: `There is no previous shipment history with this partner. New users are displayed as "New Partner" until deliveries are completed.`,
+        actionType: 'INFO'
+      };
+    }
+
     // Default Fallback
     if (language === 'hi' || language === 'hi-en') {
       return {

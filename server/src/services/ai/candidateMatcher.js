@@ -4,6 +4,7 @@ const Driver = require('../../models/Driver');
 const Shipment = require('../../models/Shipment');
 const routeService = require('../route.service');
 const pricingService = require('../pricing.service');
+const trustService = require('../trust.service');
 const matchingConfig = require('../../config/matchingConfig');
 
 class CandidateMatcher {
@@ -198,7 +199,22 @@ class CandidateMatcher {
       const estimatedPrice = pricing.grossRevenueINR || Math.round(weightTons * shipmentDistanceKm * 4.2);
       const estimatedSavings = pricing.savingsINR || Math.round(estimatedPrice * 0.18);
 
-      // G. DETERMINISTIC SCORE CALCULATION (Out of 100 points)
+      // G. TRUST & REPEAT PARTNER BOOST (Applied ONLY after hard constraints pass!)
+      let trustBoost = { boostPoints: 0, reasons: [] };
+      let trustProfile = null;
+      if (carrier && carrier._id) {
+        try {
+          const shipperId = queryParams.shipperId || queryParams.shipper;
+          if (shipperId) {
+            trustBoost = await trustService.getTrustedMatchBoost(shipperId, carrier._id);
+          }
+          trustProfile = await trustService.getTrustProfile(carrier._id);
+        } catch (e) {
+          console.error('Trust service calculation error:', e.message);
+        }
+      }
+
+      // H. DETERMINISTIC SCORE CALCULATION (Out of 100 points)
       // 1. Capacity fit (20 pts)
       const capacityScore = Math.round(20 * Math.min(1, weightTons / Math.max(0.1, cap.availableCapacityTons)));
       // 2. Route compatibility (30 pts)
@@ -209,14 +225,13 @@ class CandidateMatcher {
       const timeScore = 15;
       // 5. Driver availability (10 pts)
       const driverScore = (driver && driver.restStatus === 'WELL_RESTED') ? 10 : 9;
-      // 6. Vehicle / carrier trust (5 pts)
-      const trustScore = 5;
+      // 6. Base trust score (5 pts)
+      const baseTrust = trustProfile && trustProfile.trustScore ? Math.round(trustProfile.trustScore) : 4;
 
-      const matchScore = Math.min(100, Math.max(55, Math.round(
-        capacityScore + routeScore + detourScore + timeScore + driverScore + trustScore
-      )));
+      const rawScore = capacityScore + routeScore + detourScore + timeScore + driverScore + baseTrust + (trustBoost.boostPoints || 0);
+      const matchScore = Math.min(100, Math.max(55, Math.round(rawScore)));
 
-      // H. MATCH REASONS GENERATION
+      // I. MATCH REASONS GENERATION
       const matchReasons = [];
       matchReasons.push(`Enough available capacity (${cap.availableCapacityTons}T available)`);
       if (totalDetourKm <= 10) {
@@ -229,6 +244,12 @@ class CandidateMatcher {
       }
       matchReasons.push('Pickup window compatible');
       matchReasons.push('Driver available');
+      
+      if (trustBoost.isTrustedPartner) {
+        matchReasons.push(`★ Trusted Repeat Partner (${trustBoost.completedTripsTogether} shipments together)`);
+      } else if (trustProfile && trustProfile.trustScore) {
+        matchReasons.push(`Verified Trust Rating: ${trustProfile.displayScore}`);
+      }
 
       const candidateObj = {
         capacityId: cap._id,
@@ -255,6 +276,15 @@ class CandidateMatcher {
         estimatedSavings,
         matchScore,
         matchReasons,
+        trustProfile: trustProfile ? {
+          trustScore: trustProfile.trustScore,
+          displayScore: trustProfile.displayScore,
+          statusLabel: trustProfile.statusLabel,
+          completedShipments: trustProfile.completedShipments,
+          onTimeRate: trustProfile.onTimeRate
+        } : { statusLabel: 'New Partner', displayScore: 'New Partner' },
+        isTrustedPartner: trustBoost.isTrustedPartner || false,
+        completedTripsTogether: trustBoost.completedTripsTogether || 0,
         rejectionReasons: candidateRejectionReasons
       };
 

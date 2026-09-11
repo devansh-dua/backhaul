@@ -59,10 +59,10 @@ INSTRUCTIONS:
      'GET_MY_TRIP', 'GET_AVAILABLE_LOADS', 'GET_SHIPMENT_DETAILS', 'GET_SHIPMENT_PRICE',
      'ACCEPT_SHIPMENT', 'REJECT_SHIPMENT', 'UPDATE_AVAILABLE_CAPACITY', 'CREATE_CAPACITY',
      'GET_ETA', 'GET_EARNINGS', 'GET_DRIVER_HOURS', 'START_TRIP',
-     'REQUEST_DELIVERY_OTP', 'VERIFY_DELIVERY_OTP', 'TRANSLATE_MESSAGE'
+     'REQUEST_DELIVERY_OTP', 'VERIFY_DELIVERY_OTP', 'TRANSLATE_MESSAGE', 'QUERY_PARTNER_TRUST'
    - SHIPPER INTENTS:
      'CREATE_SHIPMENT', 'GET_SHIPMENT_STATUS', 'FIND_CAPACITY', 'COMPARE_VEHICLES',
-     'GET_SHIPPING_PRICE', 'CANCEL_SHIPMENT', 'TRANSLATE_MESSAGE'
+     'GET_SHIPPING_PRICE', 'CANCEL_SHIPMENT', 'TRANSLATE_MESSAGE', 'QUERY_PARTNER_TRUST'
    - GENERAL: 'UNKNOWN'
 
 3. Extract Entities:
@@ -175,6 +175,17 @@ Respond ONLY with valid JSON in this exact structure:
         confidence: 0.98,
         requiresConfirmation: true,
         entities: { otpCode: otpMatch[0] }
+      };
+    }
+
+    // Trust & Partner query check
+    if (lower.includes('shipper kaisa') || lower.includes('carrier reliable') || lower.includes('trust') || lower.includes('rating') || lower.includes('record kaisa')) {
+      return {
+        intent: 'QUERY_PARTNER_TRUST',
+        language: lower.includes('reliable') || lower.includes('trust') ? 'en' : 'hi-en',
+        confidence: 0.96,
+        requiresConfirmation: false,
+        entities: {}
       };
     }
 

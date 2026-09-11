@@ -9,10 +9,11 @@ import { AcceptRejectCard } from '../../components/AcceptRejectCard';
 import { analyticsApi } from '../../services/analytics.api';
 import { shipmentApi } from '../../services/shipment.api';
 import { matchApi } from '../../services/match.api';
+import { trustApi } from '../../services/trust.api';
 import { useSocket } from '../../context/SocketContext';
 import { 
   Truck, Package, Fuel, BarChart3, Leaf, Sparkles, 
-  ArrowRight, ChevronRight, Calendar, ArrowUpRight, CheckCircle2, ShieldCheck, Inbox
+  ArrowRight, ChevronRight, Calendar, ArrowUpRight, CheckCircle2, ShieldCheck, Inbox, Repeat, Star
 } from 'lucide-react';
 
 export const CarrierDashboard = () => {
@@ -38,6 +39,13 @@ export const CarrierDashboard = () => {
   // Real Opportunities from MongoDB
   const [opportunities, setOpportunities] = useState([]);
   const [aiRecommendations, setAiRecommendations] = useState([]);
+  const [trustStats, setTrustStats] = useState({
+    trustedPartners: 0,
+    repeatShipments: 0,
+    averageRating: 'New Partner',
+    onTimeRate: '100%',
+    trustedLoadsAvailable: 0
+  });
 
   useEffect(() => {
     fetchDashboardData();
@@ -52,7 +60,27 @@ export const CarrierDashboard = () => {
         setStats(resStats.data.data);
       }
 
-      // 2. Fetch Real Posted Shipments for Today's Opportunity
+      // 2. Fetch Real Trust Stats
+      try {
+        const resTrust = await trustApi.getTrustProfile();
+        const resPartners = await trustApi.getTopPartners();
+        if (resTrust.data?.success && resTrust.data.data) {
+          const tp = resTrust.data.data;
+          const partnersList = resPartners.data?.data || [];
+          const totalRepeat = partnersList.reduce((acc, p) => acc + (p.completedTogether || 0), 0);
+          setTrustStats({
+            trustedPartners: tp.repeatPartnersCount || partnersList.length || 0,
+            repeatShipments: totalRepeat,
+            averageRating: tp.averageRating !== 'New' ? `${tp.averageRating} ★` : 'New Partner',
+            onTimeRate: tp.onTimeRate || '100%',
+            trustedLoadsAvailable: partnersList.length > 0 ? Math.min(3, partnersList.length) : 0
+          });
+        }
+      } catch (err) {
+        console.error('Trust stats fetch error:', err.message);
+      }
+
+      // 3. Fetch Real Posted Shipments for Today's Opportunity
       const resShipments = await shipmentApi.getPostedShipments();
       if (resShipments.data && resShipments.data.success && Array.isArray(resShipments.data.data)) {
         const fetchedOpp = resShipments.data.data.map((item, idx) => ({
@@ -111,6 +139,52 @@ export const CarrierDashboard = () => {
           
           {/* 2. HERO SECTION */}
           <Hero onScrollToOpportunities={scrollToOpportunities} />
+
+          {/* TRUST NETWORK SECTION */}
+          <section className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 rounded-2xl p-6 text-white shadow-md">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2 text-indigo-400 font-bold text-xs uppercase tracking-wider font-outfit">
+                  <ShieldCheck size={16} />
+                  TRUST NETWORK
+                </div>
+                <h3 className="text-xl font-black font-outfit text-white">
+                  Logistics Reputation & Repeat Pairings
+                </h3>
+                <p className="text-slate-300 text-xs font-normal">
+                  {trustStats.trustedLoadsAvailable > 0
+                    ? `${trustStats.trustedLoadsAvailable} trusted partner loads available today`
+                    : 'Complete trips with shippers to build verified repeat partnerships'}
+                </p>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-4 text-center">
+                <div className="bg-white/10 px-4 py-2 rounded-xl border border-white/10">
+                  <div className="text-[11px] text-slate-300 font-medium uppercase">Trusted Partners</div>
+                  <div className="text-xl font-black font-outfit text-white">{trustStats.trustedPartners}</div>
+                </div>
+                <div className="bg-white/10 px-4 py-2 rounded-xl border border-white/10">
+                  <div className="text-[11px] text-slate-300 font-medium uppercase">Repeat Shipments</div>
+                  <div className="text-xl font-black font-outfit text-white">{trustStats.repeatShipments}</div>
+                </div>
+                <div className="bg-white/10 px-4 py-2 rounded-xl border border-white/10">
+                  <div className="text-[11px] text-slate-300 font-medium uppercase">Average Rating</div>
+                  <div className="text-xl font-black font-outfit text-amber-400">{trustStats.averageRating}</div>
+                </div>
+                <div className="bg-white/10 px-4 py-2 rounded-xl border border-white/10">
+                  <div className="text-[11px] text-slate-300 font-medium uppercase">On-Time Rate</div>
+                  <div className="text-xl font-black font-outfit text-emerald-400">{trustStats.onTimeRate}</div>
+                </div>
+
+                <button
+                  onClick={() => navigate('/carrier/trust')}
+                  className="bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs px-5 py-3 rounded-xl transition-all shadow-sm flex items-center gap-1.5 font-outfit cursor-pointer"
+                >
+                  View Trusted Matches <ArrowRight size={14} />
+                </button>
+              </div>
+            </div>
+          </section>
 
           {/* 3. TODAY'S OPPORTUNITY SECTION */}
           <section ref={opportunitiesRef} className="space-y-4">
